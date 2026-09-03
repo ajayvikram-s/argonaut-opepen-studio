@@ -1,0 +1,47 @@
+{
+  "name": "Argonaut #10002",
+  "description": "One of signed, numbered textured prints on museum board. The digital lives inside the contract. A Muse Facktory production.",
+  "attributes": [
+    {
+      "trait_type": "Palette",
+      "value": "Violet Pink"
+    },
+    {
+      "trait_type": "Bones",
+      "value": "Gold"
+    },
+    {
+      "trait_type": "Relic",
+      "value": "Gold"
+    },
+    {
+      "trait_type": "Sight",
+      "value": "Louis Vuitton"
+    },
+    {
+      "trait_type": "Artifact",
+      "value": "Woodpipe"
+    },
+    {
+      "trait_type": "Crown",
+      "value": "Purphat"
+    },
+    {
+      "trait_type": "Print",
+      "value": "Unclaimed"
+    },
+    {
+      "trait_type": "Transforms",
+      "value": "Rotate 90\u00b0, Flip H, Scale 2x"
+    }
+  ],
+  "traits_indices": [
+    22,
+    2,
+    0,
+    1,
+    8,
+    1,
+    5
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "name": "Argonaut #10003",
+  "description": "One of signed, numbered textured prints on museum board. The digital lives inside the contract. A Muse Facktory production.",
+  "attributes": [
+    {
+      "trait_type": "Palette",
+      "value": "Radioactive Seafoam"
+    },
+    {
+      "trait_type": "Bones",
+      "value": "Radioactive"
+    },
+    {
+      "trait_type": "Cloak",
+      "value": "Ivory"
+    },
+    {
+      "trait_type": "Sight",
+      "value": "Digital"
+    },
+    {
+      "trait_type": "Crown",
+      "value": "Purphat"
+    },
+    {
+      "trait_type": "Print",
+      "value": "Unclaimed"
+    },
+    {
+      "trait_type": "Transforms",
+      "value": "Rotate 90\u00b0, Flip H, Scale 2x"
+    }
+  ],
+  "traits_indices": [
+    18,
+    1,
+    4,
+    0,
+    3,
+    0,
+    5
+  ]
+}

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARGONAUT × OPEPEN — On-Chain Identity Synthesizer</title>
+  <meta name="description" content="Generate dual-head symmetrical Opepen artworks from any Argonauts NFT token ID directly from the Ethereum smart contract. Minimalist, pixel-perfect, on-chain.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ambient background glow -->
+  <div class="bg-noise"></div>
+
+  <div class="app-layout">
+    <!-- Top Minimalist Navigation -->
+    <header class="top-nav">
+      <div class="brand">
+        <span class="brand-symbol">◈</span>
+        <div class="brand-text">
+          <span class="brand-title">ARGONAUT × OPEPEN</span>
+          <span class="brand-sub">ON-CHAIN IDENTITY SYNTHESIZER</span>
+        </div>
+      </div>
+
+      <div class="nav-links">
+        <a href="https://etherscan.io/address/0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C" target="_blank" class="nav-chip" title="Argonauts Core Contract">
+          <span class="chip-dot"></span>
+          <span>0x387C...392C</span>
+        </a>
+        <a href="https://opensea.io/collection/the-argonauts" target="_blank" class="nav-chip">
+          <span>OPENSEA</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Generator Hero & Input -->
+    <main class="main-content">
+      <!-- Search & Input Section -->
+      <section class="search-section">
+        <div class="search-container">
+          <div class="input-wrapper">
+            <span class="input-prefix">TOKEN #</span>
+            <input 
+              type="number" 
+              id="token-id-input" 
+              placeholder="0001" 
+              min="1" 
+              max="9999" 
+              value="1" 
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="btn-generate" class="btn btn-primary">
+              <span class="btn-text">SYNTHESIZE OPEPEN</span>
+              <span class="btn-spinner" style="display:none;">⏳</span>
+            </button>
+          </div>
+
+          <!-- Quick presets -->
+          <div class="quick-presets">
+            <span class="presets-label">CURATED TOKENS:</span>
+            <button class="preset-pill active" data-id="1">#1 (Bone / 3D)</button>
+            <button class="preset-pill" data-id="2">#2 (LV Bone)</button>
+            <button class="preset-pill" data-id="42">#42 (Prehistoric)</button>
+            <button class="preset-pill" data-id="777">#777 (Offwhite)</button>
+            <button class="preset-pill" data-id="1337">#1337</button>
+            <button class="preset-pill" data-id="6969">#6969</button>
+            <button class="preset-pill" data-id="9999">#9999</button>
+            <button id="btn-random" class="preset-pill random-pill">🎲 RANDOM TOKEN</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stage & Canvas Viewport -->
+      <section class="stage-section">
+        <div class="stage-grid">
+          <!-- Left: The Opepen Master Canvas -->
+          <div class="canvas-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="status-indicator"></span>
+                <span id="opepen-badge" class="stage-badge">OPEPEN #0001</span>
+                <span id="trait-summary-badge" class="sub-badge">BONE • VIOLET PALETTE</span>
+              </div>
+              <div class="view-toggles">
+                <button id="toggle-grid-btn" class="toggle-btn" title="Toggle 10px Pixel Grid">GRID</button>
+                <button id="toggle-split-btn" class="toggle-btn" title="Compare with Original Token">COMPARE</button>
+              </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="canvas-viewport" id="viewport">
+              <div id="opepen-canvas-container" class="svg-container"></div>
+              
+              <!-- Split Comparison View (Hidden by default) -->
+              <div id="original-token-container" class="original-container" style="display:none;">
+                <div class="orig-header">ORIGINAL ARGONAUT</div>
+                <div id="orig-svg-wrapper" class="orig-svg-wrapper"></div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="canvas-actions">
+              <button id="btn-download-svg" class="action-btn">
+                <span class="icon">↓</span> VECTOR SVG
+              </button>
+              <button id="btn-download-jpg" class="action-btn">
+                <span class="icon">🖼</span> HD JPG
+              </button>
+              <button id="btn-download-png" class="action-btn">
+                <span class="icon">📸</span> HD PNG (2X)
+              </button>
+              <button id="btn-copy-svg" class="action-btn">
+                <span class="icon">📋</span> COPY SVG
+              </button>
+              <button id="btn-export-json" class="action-btn">
+                <span class="icon">📄</span> METADATA JSON
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Metadata & Architectural Inspector -->
+          <aside class="inspector-card">
+            <div class="inspector-header">
+              <h3>ON-CHAIN SPECIFICATIONS</h3>
+              <span id="token-contract-verified" class="verified-tag">✓ VERIFIED ETHEREUM</span>
+            </div>
+
+            <!-- Attributes Breakdown -->
+            <div class="traits-container">
+              <div class="trait-row">
+                <span class="trait-label">BONES (LAYER 1)</span>
+                <span id="meta-bones" class="trait-val">Bone</span>
+              </div>
+              <div class="trait-row">
+                <span class="trait-label">PALETTE (LAYER 0)</span>
+                <span id="meta-palette" class="trait-val">Violet (#75459C)</span>
+              </div>
+              <div class="trait-row">
+                <span class="trait-label">SIGHT (LAYER 4)</span>
+                <span id="meta-sight" class="trait-val">3D Glasses</span>
+              </div>
+              <div class="trait-row">
+                <span class="trait-label">CROWN (LAYER 6)</span>
+                <span id="meta-crown" class="trait-val">Aegean Blue Beanie</span>
+              </div>
+              <div class="trait-row">
+                <span class="trait-label">CLOAK (LAYER 2)</span>
+                <span id="meta-cloak" class="trait-val">None</span>
+              </div>
+              <div class="trait-row">
+                <span class="trait-label">RELIC (LAYER 3)</span>
+                <span id="meta-relic" class="trait-val">Gold</span>
+              </div>
+            </div>
+
+            <!-- Geometric Math & Opepen Specs -->
+            <div class="specs-block">
+              <h4>OPEPEN GEOMETRY</h4>
+              <div class="spec-grid">
+                <div class="spec-item">
+                  <span class="spec-num">560×560</span>
+                  <span class="spec-name">CANVAS DIMENSIONS</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-num">0</span>
+                  <span class="spec-name">PIXEL OVERLAPS</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-num">380</span>
+                  <span class="spec-name">TAPERED TORSO PIXELS</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-num">184</span>
+                  <span class="spec-name">TAPERED BASE PIXELS</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-num">70px</span>
+                  <span class="spec-name">OPEPEN SIGNATURE GAP</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-num">100%</span>
+                  <span class="spec-name">ON-CHAIN PALETTES</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mathematical Reflection Matrix Note -->
+            <div class="math-note">
+              <code>HEAD LEFT = [41 - gy_R, 55 - gx_R]</code>
+              <p>Anti-diagonal reflection of the upright Argonaut skull preserves micro-texture and creates dual-circle Opepen symmetry.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Curated Collection Gallery Section -->
+      <section class="gallery-section">
+        <div class="section-heading">
+          <div>
+            <h2>CURATED ARGONAUT OPEPEN EDITIONS</h2>
+            <p>Select any edition to load its full vector archetype into the synthesizer stage</p>
+          </div>
+          <span class="gallery-counter">20 EDITIONS</span>
+        </div>
+
+        <div id="gallery-grid" class="gallery-grid">
+          <!-- Populated dynamically via app.js -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Minimalist Footer -->
+    <footer class="footer">
+      <div class="footer-left">
+        <span>ARGONAUTS × OPEPEN STUDIO</span>
+        <span class="footer-separator">•</span>
+        <span>MUSE FACKTORY ON-CHAIN ENGINE</span>
+      </div>
+      <div class="footer-right">
+        <span>PIXEL-PERFECT • ZERO OVERLAPS • PURE VECTOR</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Engine Data and Application Scripts -->
+  <script src="engine_data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

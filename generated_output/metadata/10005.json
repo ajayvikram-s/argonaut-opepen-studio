@@ -1,0 +1,35 @@
+{
+  "name": "Argonaut #10005",
+  "description": "One of signed, numbered textured prints on museum board. The digital lives inside the contract. A Muse Facktory production.",
+  "attributes": [
+    {
+      "trait_type": "Palette",
+      "value": "Void Teal Vignette"
+    },
+    {
+      "trait_type": "Bones",
+      "value": "Radioactive"
+    },
+    {
+      "trait_type": "Sight",
+      "value": "Prada"
+    },
+    {
+      "trait_type": "Crown",
+      "value": "Corsair"
+    },
+    {
+      "trait_type": "Print",
+      "value": "Unclaimed"
+    }
+  ],
+  "traits_indices": [
+    29,
+    1,
+    0,
+    0,
+    9,
+    0,
+    7
+  ]
+}

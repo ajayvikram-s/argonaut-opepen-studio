@@ -1,0 +1,31 @@
+{
+  "name": "Argonaut #10004",
+  "description": "One of signed, numbered textured prints on museum board. The digital lives inside the contract. A Muse Facktory production.",
+  "attributes": [
+    {
+      "trait_type": "Palette",
+      "value": "Wine"
+    },
+    {
+      "trait_type": "Bones",
+      "value": "Gold"
+    },
+    {
+      "trait_type": "Crown",
+      "value": "Dawn Pink Beanie"
+    },
+    {
+      "trait_type": "Print",
+      "value": "Unclaimed"
+    }
+  ],
+  "traits_indices": [
+    3,
+    2,
+    0,
+    0,
+    0,
+    0,
+    3
+  ]
+}

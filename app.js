@@ -1,7 +1,10 @@
 /**
  * ARGONAUT × OPEPEN STUDIO
  * Minimalist Black & White On-Chain Synthesizer & Vector Renderer
- * Guarantees 100% full visibility for Artifact traits (Woodpipe, THC Vape, Smoke)
+ * Guarantees 100% full visibility for ALL Artifact traits:
+ * - Vape (Dragon's Breath) (Blob 80 + Smoke Blob 78)
+ * - Vape (Blueberry Kush) (Blob 79 + Smoke Blob 78)
+ * - Woodpipe (Blob 64)
  */
 
 // Trait category dictionaries
@@ -25,7 +28,6 @@ const TRAIT_LOOKUP = {
     "", "Shades", "Glasses", "Digital", "Eye Patch", "3D Glasses", "Designer",
     "Gucci", "Louis Vuitton", "Prada", "Versace", "Dior", "Balenciaga", "Chanel"
   ],
-  Artifact: ["", "Woodpipe", "THC Vape"],
   Crown: [
     "", "Oarsman's Band", "Bandana", "Dawn Pink Beanie", "Aegean Blue Beanie", "Purphat", "Golden Fleece", "Corsair"
   ]
@@ -136,6 +138,28 @@ function getTraitIndex(category, name) {
   return idx >= 0 ? idx : 0;
 }
 
+function decodeArtifactPixels(artifactName) {
+  if (!artifactName || artifactName === 'None') return {};
+  const nameLow = artifactName.toLowerCase();
+  const pxMap = {};
+  if (nameLow.includes('dragon')) {
+    // Vape smoke (Blob 78) + Dragons breath device (Blob 80)
+    const smoke = decodeBlob(78);
+    const device = decodeBlob(80);
+    Object.assign(pxMap, smoke.pixels, device.pixels);
+  } else if (nameLow.includes('vape') || nameLow.includes('blueberry') || nameLow.includes('thc')) {
+    // Vape smoke (Blob 78) + Blueberry device (Blob 79)
+    const smoke = decodeBlob(78);
+    const device = decodeBlob(79);
+    Object.assign(pxMap, smoke.pixels, device.pixels);
+  } else if (nameLow.includes('pipe') || nameLow.includes('woodpipe')) {
+    // Woodpipe (Blob 64)
+    const pipe = decodeBlob(64);
+    Object.assign(pxMap, pipe.pixels);
+  }
+  return pxMap;
+}
+
 // Pseudo random generator seeded by Token ID
 function seededRandom(seed) {
   let s = seed % 2147483647;
@@ -148,8 +172,8 @@ function seededRandom(seed) {
 // RPC Token Metadata Fetcher
 async function fetchTokenMetadata(tokenId) {
   const rpcs = [
-    'https://1rpc.io/eth',
     'https://ethereum.publicnode.com',
+    'https://1rpc.io/eth',
     'https://rpc.mevblocker.io'
   ];
   const mainContract = '0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C';
@@ -160,7 +184,7 @@ async function fetchTokenMetadata(tokenId) {
     try {
       const resp = await fetch(rpc, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'User-Agent': 'ArgonautOpepen/1.0' },
         body: JSON.stringify({
           jsonrpc: '2.0',
           id: 1,
@@ -216,7 +240,6 @@ function synthesizeOpepen(tokenId, meta) {
   const crownIdx = getTraitIndex('Crown', crownName);
   const cloakIdx = getTraitIndex('Cloak', cloakName);
   const relicIdx = getTraitIndex('Relic', relicName);
-  const artifactIdx = getTraitIndex('Artifact', artifactName);
 
   // 2. Decode Blobs
   const bgDecoded = decodeBlob(getBlobId(0, bgIdx));
@@ -227,7 +250,7 @@ function synthesizeOpepen(tokenId, meta) {
   const crownDecoded = crownIdx > 0 ? decodeBlob(getBlobId(6, crownIdx)) : { pixels: {} };
   const cloakDecoded = cloakIdx > 0 ? decodeBlob(getBlobId(2, cloakIdx)) : { pixels: {} };
   const relicDecoded = relicIdx > 0 ? decodeBlob(getBlobId(3, relicIdx)) : { pixels: {} };
-  const artifactDecoded = artifactIdx > 0 ? decodeBlob(getBlobId(5, artifactIdx)) : { pixels: {} };
+  const artifactPixels = decodeArtifactPixels(artifactName);
 
   // 3. Composite upright head (bounded general traits to rows 5..18)
   const compositeHead = {};
@@ -270,21 +293,21 @@ function synthesizeOpepen(tokenId, meta) {
     }
   });
 
-  // 6. ARTIFACT TRAITS (Woodpipe, THC Vape / Smoke): 100% uncropped & fully visible!
-  Object.keys(artifactDecoded.pixels).forEach(k => {
+  // 6. ARTIFACT TRAITS (Woodpipe, THC Vape Dragon's Breath, Blueberry Kush, Smoke): 100% UNCROPPED!
+  Object.keys(artifactPixels).forEach(k => {
     const [pt_x, pt_y] = k.split(',').map(Number);
     // Right Head (Full uncropped placement)
     const gx_R = pt_x + 22;
     const gy_R = pt_y + 9;
     if (gx_R >= 0 && gx_R < 56 && gy_R >= 0 && gy_R < 56) {
-      headRightCells[`${gx_R},${gy_R}`] = artifactDecoded.pixels[k];
+      headRightCells[`${gx_R},${gy_R}`] = artifactPixels[k];
     }
 
     // Left Head (Full uncropped anti-diagonal reflection)
     const gx_L = 41 - gy_R;
     const gy_L = 55 - gx_R;
     if (gx_L >= 0 && gx_L < 56 && gy_L >= 0 && gy_L < 56) {
-      headLeftCells[`${gx_L},${gy_L}`] = artifactDecoded.pixels[k];
+      headLeftCells[`${gx_L},${gy_L}`] = artifactPixels[k];
     }
   });
 
@@ -338,7 +361,7 @@ function synthesizeOpepen(tokenId, meta) {
     if (headRightCells[`${gx},${gy}`] || headLeftCells[`${gx},${gy}`]) return;
     const c = shuffledPalette[CANON_BODY_TARGET.length + j];
     const x = gx * 10;
-    const y = gy * 10;
+    y = gy * 10;
     basePaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${c}"/>`);
   });
 
@@ -525,21 +548,21 @@ function exportJSON() {
 // 20 Curated Editions Catalog
 const CURATED_EDITIONS = [
   { id: 1, name: "Cyber Alien Opepen", bone: "Alien", pal: "Void", traits: { Palette: "Void", Bones: "Alien", Sight: "3D Glasses" } },
-  { id: 2, name: "Radioactive Void Opepen", bone: "Radioactive", pal: "Charcoal", traits: { Palette: "Radioactive Void Charcoal", Bones: "Radioactive", Sight: "Digital" } },
+  { id: 2, name: "Radioactive Void Opepen", bone: "Radioactive", pal: "Charcoal", traits: { Palette: "Radioactive Void Charcoal", Bones: "Radioactive", Sight: "Digital", Artifact: "Vape (Dragon's Breath)" } },
   { id: 3, name: "Celestial Gold Opepen", bone: "Gold", pal: "Violet", traits: { Palette: "Violet", Bones: "Gold", Sight: "3D Glasses", Crown: "Golden Fleece", Artifact: "Woodpipe" } },
   { id: 4, name: "Liquid Silver Opepen", bone: "Silver", pal: "Void", traits: { Palette: "Void", Bones: "Silver", Sight: "Shades" } },
   { id: 5, name: "Abyssal Coral Opepen", bone: "Coral", pal: "Punkblue", traits: { Palette: "Punkblue", Bones: "Coral", Sight: "Designer", Artifact: "Woodpipe" } },
   { id: 6, name: "Ancient Petrified Opepen", bone: "Petrified", pal: "Storm", traits: { Palette: "Storm", Bones: "Petrified", Crown: "Purphat" } },
-  { id: 7, name: "Volcanic Prehistoric", bone: "Prehistoric", pal: "Wine", traits: { Palette: "Wine", Bones: "Prehistoric", Sight: "Eye Patch" } },
-  { id: 8, name: "Clergy Bone Opepen", bone: "Bone", pal: "Ancient", traits: { Palette: "Ancient", Bones: "Bone", Cloak: "Clergy" } },
-  { id: 9, name: "Neon Mint Floral", bone: "Floral", pal: "Neon Mint", traits: { Palette: "Neon Mint", Bones: "Floral", Sight: "3D Glasses" } },
+  { id: 7, name: "Volcanic Prehistoric", bone: "Prehistoric", pal: "Wine", traits: { Palette: "Wine", Bones: "Prehistoric", Sight: "Eye Patch", Artifact: "Vape (Dragon's Breath)" } },
+  { id: 8, name: "Clergy Bone Opepen", bone: "Bone", pal: "Ancient", traits: { Palette: "Ancient", Bones: "Bone", Cloak: "Clergy", Artifact: "Vape (Blueberry Kush)" } },
+  { id: 9, name: "Neon Mint Floral", bone: "Floral", pal: "Neon Mint", traits: { Palette: "Neon Mint", Bones: "Floral", Sight: "3D Glasses", Artifact: "Vape (Dragon's Breath)" } },
   { id: 10, name: "Hot Rose Alien", bone: "Alien", pal: "Hot Rose", traits: { Palette: "Hot Rose", Bones: "Alien", Sight: "Shades" } },
   { id: 11, name: "Deep Raspberry Radio", bone: "Radioactive", pal: "Raspberry", traits: { Palette: "Radioactive Deep Raspberry", Bones: "Radioactive", Sight: "Designer", Artifact: "Woodpipe" } },
-  { id: 12, name: "Emerald Gold Opepen", bone: "Gold", pal: "Emerald", traits: { Palette: "Emerald", Bones: "Gold", Sight: "3D Glasses" } },
-  { id: 13, name: "Bubblegum Silver", bone: "Silver", pal: "Bubblegum", traits: { Palette: "Bubblegum", Bones: "Silver", Sight: "Glasses" } },
-  { id: 14, name: "Bright Lilac Coral", bone: "Coral", pal: "Bright Lilac", traits: { Palette: "Bright Lilac", Bones: "Coral", Crown: "Aegean Blue Beanie" } },
+  { id: 12, name: "Emerald Gold Opepen", bone: "Gold", pal: "Emerald", traits: { Palette: "Emerald", Bones: "Gold", Sight: "3D Glasses", Artifact: "Woodpipe" } },
+  { id: 13, name: "Bubblegum Silver", bone: "Silver", pal: "Bubblegum", traits: { Palette: "Bubblegum", Bones: "Silver", Sight: "Glasses", Artifact: "Woodpipe" } },
+  { id: 14, name: "Bright Lilac Coral", bone: "Coral", pal: "Bright Lilac", traits: { Palette: "Bright Lilac", Bones: "Coral", Crown: "Aegean Blue Beanie", Artifact: "Woodpipe" } },
   { id: 15, name: "Seafoam Alien Opepen", bone: "Alien", pal: "Seafoam", traits: { Palette: "Radioactive Seafoam", Bones: "Alien", Sight: "3D Glasses" } },
-  { id: 16, name: "Wine Petrified Opepen", bone: "Petrified", pal: "Wine", traits: { Palette: "Wine", Bones: "Petrified", Sight: "Shades" } },
+  { id: 16, name: "Wine Petrified Opepen", bone: "Petrified", pal: "Wine", traits: { Palette: "Wine", Bones: "Petrified", Sight: "Shades", Artifact: "Woodpipe" } },
   { id: 17, name: "Siren Prehistoric", bone: "Prehistoric", pal: "Siren", traits: { Palette: "Siren", Bones: "Prehistoric", Sight: "Eye Patch" } },
   { id: 18, name: "Storm Silver Opepen", bone: "Silver", pal: "Storm", traits: { Palette: "Storm", Bones: "Silver", Sight: "3D Glasses" } },
   { id: 19, name: "Void Cyan Bone", bone: "Bone", pal: "Void Cyan", traits: { Palette: "Void Cyan", Bones: "Bone", Sight: "3D Glasses" } },

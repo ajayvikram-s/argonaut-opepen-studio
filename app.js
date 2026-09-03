@@ -1,13 +1,20 @@
 /**
  * ARGONAUT × OPEPEN STUDIO
  * Minimalist Black & White On-Chain Synthesizer & Vector Renderer
- * Guarantees 100% full visibility for ALL Artifact traits:
- * - Vape (Dragon's Breath) (Blob 80 + Smoke Blob 78)
- * - Vape (Blueberry Kush) (Blob 79 + Smoke Blob 78)
- * - Woodpipe (Blob 64)
+ * Layer definitions, naming, and paint sequence are strictly identical to the Argonauts smart contract:
+ * - Layer 0: Palette (LAYER_BACKGROUND)
+ * - Layer 1: Bones (LAYER_BODY)
+ * - Layer 2: Cloak (LAYER_HOODIE)
+ * - Layer 3: Relic (LAYER_NECK)
+ * - Layer 4: Sight (LAYER_EYES)
+ * - Layer 5: Artifact (LAYER_MOUTH)
+ * - Layer 6: Crown (LAYER_HEAD)
+ *
+ * Paint Stacking Order (from RendererV2.sol):
+ * 1. Palette -> 2. Bones -> 3. Vapor Smoke -> 4. Sight -> 5. Cloak -> 6. Relic -> 7. Artifact Device -> 8. Crown
  */
 
-// Trait category dictionaries
+// Trait category dictionaries matching on-chain frozen table indices
 const TRAIT_LOOKUP = {
   Palette: [
     "Bubblegum", "Yellow", "Violet", "Wine", "Sky", "Void", "MuseGreen", "Ancient",
@@ -138,26 +145,21 @@ function getTraitIndex(category, name) {
   return idx >= 0 ? idx : 0;
 }
 
-function decodeArtifactPixels(artifactName) {
-  if (!artifactName || artifactName === 'None') return {};
+function decodeArtifactLayers(artifactName) {
+  if (!artifactName || artifactName === 'None') return { device: {}, smoke: {} };
   const nameLow = artifactName.toLowerCase();
-  const pxMap = {};
+  let device = {};
+  let smoke = {};
   if (nameLow.includes('dragon')) {
-    // Vape smoke (Blob 78) + Dragons breath device (Blob 80)
-    const smoke = decodeBlob(78);
-    const device = decodeBlob(80);
-    Object.assign(pxMap, smoke.pixels, device.pixels);
+    smoke = decodeBlob(78).pixels;
+    device = decodeBlob(80).pixels;
   } else if (nameLow.includes('vape') || nameLow.includes('blueberry') || nameLow.includes('thc')) {
-    // Vape smoke (Blob 78) + Blueberry device (Blob 79)
-    const smoke = decodeBlob(78);
-    const device = decodeBlob(79);
-    Object.assign(pxMap, smoke.pixels, device.pixels);
+    smoke = decodeBlob(78).pixels;
+    device = decodeBlob(79).pixels;
   } else if (nameLow.includes('pipe') || nameLow.includes('woodpipe')) {
-    // Woodpipe (Blob 64)
-    const pipe = decodeBlob(64);
-    Object.assign(pxMap, pipe.pixels);
+    device = decodeBlob(64).pixels;
   }
-  return pxMap;
+  return { device, smoke };
 }
 
 // Pseudo random generator seeded by Token ID
@@ -216,7 +218,7 @@ async function fetchTokenMetadata(tokenId) {
   return null;
 }
 
-// Generate Argonaut Opepen from Token
+// Generate Argonaut Opepen from Token following strict contract paint order
 function synthesizeOpepen(tokenId, meta) {
   const attrMap = {};
   if (meta && meta.attributes) {
@@ -225,89 +227,116 @@ function synthesizeOpepen(tokenId, meta) {
     });
   }
 
+  // Canonical Contract Layer Indices:
+  // Layer 0: Palette
+  // Layer 1: Bones
+  // Layer 2: Cloak
+  // Layer 3: Relic
+  // Layer 4: Sight
+  // Layer 5: Artifact
+  // Layer 6: Crown
   const bgName = attrMap['Palette'] || 'Void';
   const bonesName = attrMap['Bones'] || 'Bone';
-  const sightName = attrMap['Sight'] || '';
-  const crownName = attrMap['Crown'] || '';
   const cloakName = attrMap['Cloak'] || '';
   const relicName = attrMap['Relic'] || '';
+  const sightName = attrMap['Sight'] || '';
   const artifactName = attrMap['Artifact'] || '';
+  const crownName = attrMap['Crown'] || '';
 
-  // 1. Get Trait Indices
   const bgIdx = getTraitIndex('Palette', bgName);
   const bonesIdx = getTraitIndex('Bones', bonesName);
-  const sightIdx = getTraitIndex('Sight', sightName);
-  const crownIdx = getTraitIndex('Crown', crownName);
   const cloakIdx = getTraitIndex('Cloak', cloakName);
   const relicIdx = getTraitIndex('Relic', relicName);
+  const sightIdx = getTraitIndex('Sight', sightName);
+  const crownIdx = getTraitIndex('Crown', crownName);
 
-  // 2. Decode Blobs
+  // Decode layer blobs
   const bgDecoded = decodeBlob(getBlobId(0, bgIdx));
   const bgColor = bgDecoded.palette[0] || "#141414";
 
   const boneDecoded = decodeBlob(getBlobId(1, bonesIdx));
-  const sightDecoded = sightIdx > 0 ? decodeBlob(getBlobId(4, sightIdx)) : { pixels: {} };
-  const crownDecoded = crownIdx > 0 ? decodeBlob(getBlobId(6, crownIdx)) : { pixels: {} };
   const cloakDecoded = cloakIdx > 0 ? decodeBlob(getBlobId(2, cloakIdx)) : { pixels: {} };
   const relicDecoded = relicIdx > 0 ? decodeBlob(getBlobId(3, relicIdx)) : { pixels: {} };
-  const artifactPixels = decodeArtifactPixels(artifactName);
+  const sightDecoded = sightIdx > 0 ? decodeBlob(getBlobId(4, sightIdx)) : { pixels: {} };
+  const { device: artifactDevicePx, smoke: artifactSmokePx } = decodeArtifactLayers(artifactName);
+  const crownDecoded = crownIdx > 0 ? decodeBlob(getBlobId(6, crownIdx)) : { pixels: {} };
 
-  // 3. Composite upright head (bounded general traits to rows 5..18)
+  // Strict Paint Stacking Sequence from RendererV2.sol:
+  // 1. Bones (Body)
+  // 2. Vapor Smoke
+  // 3. Sight (Eyes)
+  // 4. Cloak (Hoodie)
+  // 5. Relic (Neck)
+  // 6. Artifact Device (Mouth)
+  // 7. Crown (Head)
   const compositeHead = {};
-  const generalLayers = [
-    boneDecoded.pixels,
-    sightDecoded.pixels,
-    cloakDecoded.pixels,
-    relicDecoded.pixels,
-    crownDecoded.pixels
-  ];
 
-  generalLayers.forEach(pxMap => {
-    Object.keys(pxMap).forEach(k => {
-      const [px, py] = k.split(',').map(Number);
-      if (py >= 5 && py <= 18) {
-        compositeHead[`${px},${py}`] = pxMap[k];
-      }
-    });
+  // Layer 1: Bones (bounded to head rows 5..18)
+  Object.keys(boneDecoded.pixels).forEach(k => {
+    const py = Number(k.split(',')[1]);
+    if (py >= 5 && py <= 18) compositeHead[k] = boneDecoded.pixels[k];
   });
 
-  // 4. Build Right Head (Bounded for general traits)
+  // Layer 5 Smoke: Vapor Smoke (rendered before eyes so it drifts behind frame)
+  Object.keys(artifactSmokePx).forEach(k => {
+    compositeHead[k] = artifactSmokePx[k];
+  });
+
+  // Layer 4: Sight (Eyes)
+  Object.keys(sightDecoded.pixels).forEach(k => {
+    const py = Number(k.split(',')[1]);
+    if (py >= 5 && py <= 18) compositeHead[k] = sightDecoded.pixels[k];
+  });
+
+  // Layer 2: Cloak (Hoodie)
+  Object.keys(cloakDecoded.pixels).forEach(k => {
+    const py = Number(k.split(',')[1]);
+    if (py >= 5 && py <= 18) compositeHead[k] = cloakDecoded.pixels[k];
+  });
+
+  // Layer 3: Relic (Neck)
+  Object.keys(relicDecoded.pixels).forEach(k => {
+    const py = Number(k.split(',')[1]);
+    if (py >= 5 && py <= 18) compositeHead[k] = relicDecoded.pixels[k];
+  });
+
+  // Layer 5 Device: Artifact / Mouth Device (Woodpipe / Vape device)
+  Object.keys(artifactDevicePx).forEach(k => {
+    compositeHead[k] = artifactDevicePx[k];
+  });
+
+  // Layer 6: Crown (Head)
+  Object.keys(crownDecoded.pixels).forEach(k => {
+    const py = Number(k.split(',')[1]);
+    if (py >= 5 && py <= 18) compositeHead[k] = crownDecoded.pixels[k];
+  });
+
+  // Build Right Head
   const headRightCells = {};
   Object.keys(compositeHead).forEach(k => {
     const [pt_x, pt_y] = k.split(',').map(Number);
     const gx_R = pt_x + 22;
     const gy_R = pt_y + 9;
-    if (gx_R >= 28 && gx_R <= 41 && gy_R >= 14 && gy_R <= 27) {
-      headRightCells[`${gx_R},${gy_R}`] = compositeHead[k];
+    const isArtifactPixel = artifactDevicePx[k] || artifactSmokePx[k];
+    if (isArtifactPixel) {
+      if (gx_R >= 0 && gx_R < 56 && gy_R >= 0 && gy_R < 56) {
+        headRightCells[`${gx_R},${gy_R}`] = compositeHead[k];
+      }
+    } else {
+      if (gx_R >= 28 && gx_R <= 41 && gy_R >= 14 && gy_R <= 27) {
+        headRightCells[`${gx_R},${gy_R}`] = compositeHead[k];
+      }
     }
   });
 
-  // 5. Build Left Head (Anti-diagonal reflection for general traits)
+  // Build Left Head (Anti-diagonal reflection)
   const headLeftCells = {};
   Object.keys(headRightCells).forEach(k => {
     const [gx_R, gy_R] = k.split(',').map(Number);
     const gx_L = 41 - gy_R;
     const gy_L = 55 - gx_R;
-    if (gx_L >= 14 && gx_L <= 27 && gy_L >= 14 && gy_L <= 27) {
-      headLeftCells[`${gx_L},${gy_L}`] = headRightCells[k];
-    }
-  });
-
-  // 6. ARTIFACT TRAITS (Woodpipe, THC Vape Dragon's Breath, Blueberry Kush, Smoke): 100% UNCROPPED!
-  Object.keys(artifactPixels).forEach(k => {
-    const [pt_x, pt_y] = k.split(',').map(Number);
-    // Right Head (Full uncropped placement)
-    const gx_R = pt_x + 22;
-    const gy_R = pt_y + 9;
-    if (gx_R >= 0 && gx_R < 56 && gy_R >= 0 && gy_R < 56) {
-      headRightCells[`${gx_R},${gy_R}`] = artifactPixels[k];
-    }
-
-    // Left Head (Full uncropped anti-diagonal reflection)
-    const gx_L = 41 - gy_R;
-    const gy_L = 55 - gx_R;
     if (gx_L >= 0 && gx_L < 56 && gy_L >= 0 && gy_L < 56) {
-      headLeftCells[`${gx_L},${gy_L}`] = artifactPixels[k];
+      headLeftCells[`${gx_L},${gy_L}`] = headRightCells[k];
     }
   });
 
@@ -332,7 +361,7 @@ function synthesizeOpepen(tokenId, meta) {
     headLeftPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${color}"${opStr}/>`);
   });
 
-  // 7. Body & Base Organic Sampling from on-chain bone palette
+  // Body & Base Organic Sampling from on-chain bone palette
   const bonePalette = boneDecoded.palette.length ? boneDecoded.palette : ["#DCD4D0", "#BDB9B8", "#8D8B8A", "#6A6866"];
   const rng = seededRandom(tokenId * 31337 + 42);
 
@@ -348,7 +377,6 @@ function synthesizeOpepen(tokenId, meta) {
 
   const bodyPaths = [];
   CANON_BODY_TARGET.forEach(([gx, gy], i) => {
-    // Avoid double-rendering if artifact overlaps
     if (headRightCells[`${gx},${gy}`] || headLeftCells[`${gx},${gy}`]) return;
     const c = shuffledPalette[i];
     const x = gx * 10;
@@ -380,11 +408,11 @@ ${basePaths.join('\n')}
       palette: bgName,
       paletteHex: bgColor,
       bones: bonesName,
+      cloak: cloakName || 'None',
+      relic: relicName || 'None',
       sight: sightName || 'None',
       artifact: artifactName || 'None',
-      crown: crownName || 'None',
-      cloak: cloakName || 'None',
-      relic: relicName || 'None'
+      crown: crownName || 'None'
     }
   };
 }
@@ -419,7 +447,6 @@ async function loadToken(tokenId) {
   try {
     let meta = await fetchTokenMetadata(tokenId);
     if (!meta) {
-      // Mock default metadata from on-chain rules if unminted or offline
       meta = {
         name: `Argonaut #${tokenId.toString().padStart(4, '0')}`,
         attributes: [
@@ -447,16 +474,16 @@ async function loadToken(tokenId) {
     const artLabel = traits.artifact !== 'None' ? ` • ${traits.artifact.toUpperCase()}` : '';
     document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE${artLabel}`;
 
-    // Update Inspector Traits
-    document.getElementById('meta-bones').textContent = traits.bones;
+    // Update Inspector Traits in Canonical Contract Layer Order (0..6):
     document.getElementById('meta-palette').textContent = `${traits.palette} (${traits.paletteHex})`;
+    document.getElementById('meta-bones').textContent = traits.bones;
+    document.getElementById('meta-cloak').textContent = traits.cloak;
+    document.getElementById('meta-relic').textContent = traits.relic;
     document.getElementById('meta-sight').textContent = traits.sight;
     if (document.getElementById('meta-artifact')) {
       document.getElementById('meta-artifact').textContent = traits.artifact;
     }
     document.getElementById('meta-crown').textContent = traits.crown;
-    document.getElementById('meta-cloak').textContent = traits.cloak;
-    document.getElementById('meta-relic').textContent = traits.relic;
 
     showToast(`Synthesized Argonaut Opepen #${tokenId}`);
   } catch (err) {
@@ -527,7 +554,7 @@ function exportJSON() {
   if (!currentMetadata) return;
   const opepenMeta = {
     name: `Argonaut Opepen #${currentTokenId.toString().padStart(4, '0')}`,
-    description: `Synthesized on-chain Argonaut Opepen with uncropped Artifact traits, dual-head anti-diagonal symmetry, 380-pixel tapered torso, and zero pixel overlaps.`,
+    description: `Synthesized on-chain Argonaut Opepen with contract-accurate layer stacking, uncropped Artifact traits, dual-head anti-diagonal symmetry, 380-pixel tapered torso, and zero pixel overlaps.`,
     attributes: [
       ...(currentMetadata.attributes || []),
       { trait_type: "Style", value: "Argonaut Opepen" },
@@ -610,15 +637,15 @@ window.loadCurated = function(idx) {
   const artLabel = traits.artifact !== 'None' ? ` • ${traits.artifact.toUpperCase()}` : '';
   document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE${artLabel}`;
 
-  document.getElementById('meta-bones').textContent = traits.bones;
   document.getElementById('meta-palette').textContent = `${traits.palette} (${traits.paletteHex})`;
+  document.getElementById('meta-bones').textContent = traits.bones;
+  document.getElementById('meta-cloak').textContent = traits.cloak;
+  document.getElementById('meta-relic').textContent = traits.relic;
   document.getElementById('meta-sight').textContent = traits.sight;
   if (document.getElementById('meta-artifact')) {
     document.getElementById('meta-artifact').textContent = traits.artifact;
   }
   document.getElementById('meta-crown').textContent = traits.crown;
-  document.getElementById('meta-cloak').textContent = traits.cloak;
-  document.getElementById('meta-relic').textContent = traits.relic;
 
   showToast(`Loaded ${item.name}`);
 };

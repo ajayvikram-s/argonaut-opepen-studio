@@ -4,8 +4,15 @@ Argonaut to Opepen Converter Tool
 Fetches any Argonaut token directly from the Ethereum smart contract (1..9999),
 extracts its exact on-chain traits, composite head, and colors, and generates
 the corresponding pixel-perfect Argonaut Opepen artwork in both SVG and JPG formats!
-Ensures ALL Artifact traits (Woodpipe, Vape Dragon's Breath, Vape Blueberry Kush, Vapor Smoke)
-are 100% uncropped and fully visible!
+
+Layering & Paint Stacking strictly follows the Argonauts smart contract:
+- Layer 0: Palette (LAYER_BACKGROUND)
+- Layer 1: Bones (LAYER_BODY)
+- Layer 2: Cloak (LAYER_HOODIE)
+- Layer 3: Relic (LAYER_NECK)
+- Layer 4: Sight (LAYER_EYES)
+- Layer 5: Artifact (LAYER_MOUTH)
+- Layer 6: Crown (LAYER_HEAD)
 """
 
 import os
@@ -107,28 +114,21 @@ def get_trait_index(category, name):
             return idx
     return 0
 
-def decode_artifact_pixels(artifact_name):
+def decode_artifact_layers(artifact_name):
     if not artifact_name or artifact_name == 'None':
-        return {}
+        return {}, {}
     name_low = artifact_name.lower()
-    px_map = {}
+    device = {}
+    smoke = {}
     if 'dragon' in name_low:
-        # Vape smoke (Blob 78) + Dragons breath device (Blob 80)
         smoke, _ = decode_blob(78)
         device, _ = decode_blob(80)
-        px_map.update(smoke)
-        px_map.update(device)
     elif 'vape' in name_low or 'blueberry' in name_low or 'thc' in name_low:
-        # Vape smoke (Blob 78) + Blueberry device (Blob 79)
         smoke, _ = decode_blob(78)
         device, _ = decode_blob(79)
-        px_map.update(smoke)
-        px_map.update(device)
     elif 'pipe' in name_low or 'woodpipe' in name_low:
-        # Woodpipe (Blob 64)
-        pipe, _ = decode_blob(64)
-        px_map.update(pipe)
-    return px_map
+        device, _ = decode_blob(64)
+    return device, smoke
 
 # Canonical Tapered Silhouette Cells
 CANON_BODY_TARGET = []
@@ -204,16 +204,23 @@ def generate_opepen_for_token(token_id, output_dir=None):
     attributes = meta.get('attributes', [])
     attr_dict = {a.get('trait_type'): a.get('value') for a in attributes if isinstance(a, dict)}
     
-    bg_name = attr_dict.get('Palette', 'Void')
-    bones_name = attr_dict.get('Bones', 'Bone')
-    cloak_name = attr_dict.get('Cloak', '')
-    relic_name = attr_dict.get('Relic', '')
-    sight_name = attr_dict.get('Sight', '')
-    artifact_name = attr_dict.get('Artifact', '')
-    crown_name = attr_dict.get('Crown', '')
+    # Contract layer mappings:
+    bg_name = attr_dict.get('Palette', 'Void')      # Layer 0
+    bones_name = attr_dict.get('Bones', 'Bone')     # Layer 1
+    cloak_name = attr_dict.get('Cloak', '')         # Layer 2
+    relic_name = attr_dict.get('Relic', '')         # Layer 3
+    sight_name = attr_dict.get('Sight', '')         # Layer 4
+    artifact_name = attr_dict.get('Artifact', '')   # Layer 5
+    crown_name = attr_dict.get('Crown', '')         # Layer 6
     
     print(f"    Name: {name}")
-    print(f"    Bones: {bones_name} | Palette: {bg_name} | Artifact: {artifact_name or 'None'} | Sight: {sight_name or 'None'}")
+    print(f"    Layer 0 (Palette):  {bg_name}")
+    print(f"    Layer 1 (Bones):    {bones_name}")
+    print(f"    Layer 2 (Cloak):    {cloak_name or 'None'}")
+    print(f"    Layer 3 (Relic):    {relic_name or 'None'}")
+    print(f"    Layer 4 (Sight):    {sight_name or 'None'}")
+    print(f"    Layer 5 (Artifact): {artifact_name or 'None'}")
+    print(f"    Layer 6 (Crown):    {crown_name or 'None'}")
 
     bg_idx = get_trait_index('Palette', bg_name)
     body_idx = get_trait_index('Bones', bones_name)
@@ -226,28 +233,47 @@ def generate_opepen_for_token(token_id, output_dir=None):
     _, bg_pal = decode_blob(get_blob_id(0, bg_idx))
     bg_color = bg_pal[0] if bg_pal else "#141414"
 
-    # 2. Trait decoding
+    # 2. Decode Blobs
     bone_px, bone_palette = decode_blob(get_blob_id(1, body_idx))
     cloak_px, _ = decode_blob(get_blob_id(2, cloak_idx)) if cloak_idx > 0 else ({}, [])
     relic_px, _ = decode_blob(get_blob_id(3, relic_idx)) if relic_idx > 0 else ({}, [])
     sight_px, _ = decode_blob(get_blob_id(4, sight_idx)) if sight_idx > 0 else ({}, [])
     crown_px, _ = decode_blob(get_blob_id(6, crown_idx)) if crown_idx > 0 else ({}, [])
-    artifact_px = decode_artifact_pixels(artifact_name)
+    artifact_device_px, artifact_smoke_px = decode_artifact_layers(artifact_name)
 
-    # 3. Composite head pixels for general traits (bounded to rows 5..18)
+    # 3. Strict Paint Stacking Sequence from RendererV2.sol:
+    # 1. Bones -> 2. Vapor Smoke -> 3. Sight -> 4. Cloak -> 5. Relic -> 6. Artifact Device -> 7. Crown
     composite_head = {}
+
+    # Layer 1: Bones
     for pt, (c, a) in bone_px.items():
         if 5 <= pt[1] <= 18:
             composite_head[pt] = (c, a)
+
+    # Layer 5 Smoke: Vapor Smoke (rendered before eyes so it drifts behind frame)
+    for pt, (c, a) in artifact_smoke_px.items():
+        composite_head[pt] = (c, a)
+
+    # Layer 4: Sight (Eyes)
     for pt, (c, a) in sight_px.items():
         if 5 <= pt[1] <= 18:
             composite_head[pt] = (c, a)
+
+    # Layer 2: Cloak (Hoodie)
     for pt, (c, a) in cloak_px.items():
         if 5 <= pt[1] <= 18:
             composite_head[pt] = (c, a)
+
+    # Layer 3: Relic (Neck)
     for pt, (c, a) in relic_px.items():
         if 5 <= pt[1] <= 18:
             composite_head[pt] = (c, a)
+
+    # Layer 5 Device: Artifact / Mouth Device
+    for pt, (c, a) in artifact_device_px.items():
+        composite_head[pt] = (c, a)
+
+    # Layer 6: Crown (Head)
     for pt, (c, a) in crown_px.items():
         if 5 <= pt[1] <= 18:
             composite_head[pt] = (c, a)
@@ -257,26 +283,17 @@ def generate_opepen_for_token(token_id, output_dir=None):
     for (pt_x, pt_y), (c, a) in composite_head.items():
         gx_R = pt_x + 22
         gy_R = pt_y + 9
-        if 28 <= gx_R <= 41 and 14 <= gy_R <= 27:
-            head_right_cells[(gx_R, gy_R)] = (c, a)
+        is_artifact_pixel = (pt_x, pt_y) in artifact_device_px or (pt_x, pt_y) in artifact_smoke_px
+        if is_artifact_pixel:
+            if 0 <= gx_R < 56 and 0 <= gy_R < 56:
+                head_right_cells[(gx_R, gy_R)] = (c, a)
+        else:
+            if 28 <= gx_R <= 41 and 14 <= gy_R <= 27:
+                head_right_cells[(gx_R, gy_R)] = (c, a)
 
     # 5. Left Head construction (Anti-diagonal reflection)
     head_left_cells = {}
     for (gx_R, gy_R), (c, a) in head_right_cells.items():
-        gx_L = 41 - gy_R
-        gy_L = 55 - gx_R
-        if 14 <= gx_L <= 27 and 14 <= gy_L <= 27:
-            head_left_cells[(gx_L, gy_L)] = (c, a)
-
-    # 6. ARTIFACT TRAITS (Woodpipe, THC Vape Dragon/Blueberry, Smoke): 100% UNCROPPED & FULLY VISIBLE!
-    for (pt_x, pt_y), (c, a) in artifact_px.items():
-        # Right Head (Uncropped placement)
-        gx_R = pt_x + 22
-        gy_R = pt_y + 9
-        if 0 <= gx_R < 56 and 0 <= gy_R < 56:
-            head_right_cells[(gx_R, gy_R)] = (c, a)
-
-        # Left Head (Uncropped anti-diagonal reflection)
         gx_L = 41 - gy_R
         gy_L = 55 - gx_R
         if 0 <= gx_L < 56 and 0 <= gy_L < 56:
@@ -382,7 +399,7 @@ def generate_opepen_for_token(token_id, output_dir=None):
         r, g, b = hex_to_rgb(c)
         draw.rectangle([x, y, x + 10, y + 10], fill=(r, g, b, 255))
 
-    # Draw heads with uncropped artifacts
+    # Draw heads with exact layer stack
     for (gx, gy), (fill, a) in head_left_cells.items():
         x, y = gx * 10, gy * 10
         r, g, b = hex_to_rgb(fill)
@@ -396,14 +413,14 @@ def generate_opepen_for_token(token_id, output_dir=None):
     rgb_img = img.convert('RGB')
     rgb_img.save(jpg_path, 'JPEG', quality=98)
 
-    print(f"[+] SUCCESS: Created Argonaut Opepen with full uncropped Artifact trait for Token #{token_id}:")
+    print(f"[+] SUCCESS: Created Argonaut Opepen for Token #{token_id}:")
     print(f"    SVG: {svg_path}")
     print(f"    JPG: {jpg_path}")
     return svg_path, jpg_path
 
 def main():
     parser = argparse.ArgumentParser(description="Convert any on-chain Argonaut token into an Argonaut Opepen.")
-    parser.add_argument('tokens', nargs='*', type=int, help="Token ID(s) to convert (e.g. 1 2 3 5 42 777 9999)")
+    parser.add_argument('tokens', nargs='*', type=int, help="Token ID(s) to convert (e.g. 1 2 3 5 42 777 1458 9999)")
     parser.add_argument('--out', type=str, default="custom_opepens", help="Output directory for generated files")
     args = parser.parse_args()
 

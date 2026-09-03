@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+"""
+Argonaut to Opepen Converter Tool
+Fetches any Argonaut token directly from the Ethereum smart contract (1..9999),
+extracts its exact on-chain traits, composite head, and colors, and generates
+the corresponding pixel-perfect Argonaut Opepen artwork in both SVG and JPG formats!
+Ensures Artifact traits (e.g. Woodpipe, THC Vape) are 100% uncropped and fully visible!
+"""
+
 import os
 import sys
 import json
@@ -63,7 +72,6 @@ def decode_blob(blob_id):
         off += 3
     return pixels, [c[0] for c in palette]
 
-# Trait string to Layer index mapping
 TRAIT_LOOKUP = {
     'Palette': [
         "Bubblegum", "Yellow", "Violet", "Wine", "Sky", "Void", "MuseGreen", "Ancient",
@@ -82,7 +90,7 @@ TRAIT_LOOKUP = {
     'Relic': ["", "Gold"],
     'Sight': [
         "", "Shades", "Glasses", "Digital", "Eye Patch", "3D Glasses", "Designer",
-        "Gucci", "Louis Vuitton", "Prada", "Versace", "Dior", "Balenciaga", "Chanel", "Eye Patch"
+        "Gucci", "Louis Vuitton", "Prada", "Versace", "Dior", "Balenciaga", "Chanel"
     ],
     'Artifact': ["", "Woodpipe", "THC Vape"],
     'Crown': [
@@ -94,68 +102,33 @@ def get_trait_index(category, name):
     if not name:
         return 0
     names = TRAIT_LOOKUP.get(category, [])
-    # Case insensitive exact match or prefix
     for idx, n in enumerate(names):
         if n.lower() == name.lower():
             return idx
     return 0
 
-# Extract the exact canonical silhouette from 09_Neon_Mint_Floral_Opepen.svg
-def parse_d_box(d):
-    tokens = re.findall(r'([A-Za-z]|-?\d+(?:\.\d+)?)', d)
-    curr_x, curr_y = 0, 0
-    xs, ys = [], []
-    i = 0
-    while i < len(tokens):
-        cmd = tokens[i]
-        if cmd == 'M':
-            curr_x = float(tokens[i+1])
-            curr_y = float(tokens[i+2])
-            xs.append(curr_x)
-            ys.append(curr_y)
-            i += 3
-        elif cmd == 'H':
-            curr_x = float(tokens[i+1])
-            xs.append(curr_x)
-            i += 2
-        elif cmd == 'V':
-            curr_y = float(tokens[i+1])
-            ys.append(curr_y)
-            i += 2
-        elif cmd in ['Z', 'z']:
-            i += 1
-        else:
-            i += 1
-    if not xs or not ys:
-        return None
-    return int(min(xs)), int(min(ys))
-
-with open('argonaut_opepens/09_Neon_Mint_Floral_Opepen.svg', 'r') as f:
-    canon_opepen = f.read()
-
-canon_paths = re.findall(r'<path d="([^"]+)" fill="([^"]+)"', canon_opepen)
+# Canonical Tapered Silhouette Cells
 CANON_BODY_TARGET = []
+for gy in range(28, 42):
+    for gx in range(14, 42):
+        if gy == 39 and (gx == 14 or gx == 41):
+            continue
+        if gy == 40 and (gx <= 15 or gx >= 40):
+            continue
+        if gy == 41 and (gx <= 16 or gx >= 39):
+            continue
+        CANON_BODY_TARGET.append((gx, gy))
+
 CANON_BASE_TARGET = []
-
-for d, _ in canon_paths:
-    if d == "M560 0H0V560H560V0Z":
-        continue
-    box = parse_d_box(d)
-    if not box:
-        continue
-    gx = box[0] // 10
-    gy = box[1] // 10
-    if 28 <= gy <= 41:
-        if (gx, gy) not in CANON_BODY_TARGET:
-            CANON_BODY_TARGET.append((gx, gy))
-    elif 49 <= gy <= 55:
-        if (gx, gy) not in CANON_BASE_TARGET:
-            CANON_BASE_TARGET.append((gx, gy))
-
-CANON_BODY_TARGET.sort(key=lambda pt: (pt[1], pt[0]))
-CANON_BASE_TARGET.sort(key=lambda pt: (pt[1], pt[0]))
-
-print(f"Canonical Silhouette: Body = {len(CANON_BODY_TARGET)} cells (Tapered), Base = {len(CANON_BASE_TARGET)} cells (Tapered)")
+for gy in range(49, 56):
+    for gx in range(14, 42):
+        if gy == 49 and (gx <= 16 or gx >= 39):
+            continue
+        if gy == 50 and (gx <= 15 or gx >= 40):
+            continue
+        if gy == 51 and (gx == 14 or gx == 41):
+            continue
+        CANON_BASE_TARGET.append((gx, gy))
 
 def fetch_token_metadata(token_id):
     payload = json.dumps({
@@ -213,19 +186,18 @@ def generate_opepen_for_token(token_id, output_dir=None):
     cloak_name = attr_dict.get('Cloak', '')
     relic_name = attr_dict.get('Relic', '')
     sight_name = attr_dict.get('Sight', '')
-    mouth_name = attr_dict.get('Artifact', '')
+    artifact_name = attr_dict.get('Artifact', '')
     crown_name = attr_dict.get('Crown', '')
     
     print(f"    Name: {name}")
-    print(f"    Bones: {bones_name} | Palette: {bg_name} | Sight: {sight_name} | Crown: {crown_name}")
+    print(f"    Bones: {bones_name} | Palette: {bg_name} | Artifact: {artifact_name or 'None'} | Sight: {sight_name or 'None'}")
 
-    # Get trait layer indices
     bg_idx = get_trait_index('Palette', bg_name)
     body_idx = get_trait_index('Bones', bones_name)
     cloak_idx = get_trait_index('Cloak', cloak_name)
     relic_idx = get_trait_index('Relic', relic_name)
     sight_idx = get_trait_index('Sight', sight_name)
-    mouth_idx = get_trait_index('Artifact', mouth_name)
+    artifact_idx = get_trait_index('Artifact', artifact_name)
     crown_idx = get_trait_index('Crown', crown_name)
 
     # 1. Background color
@@ -237,11 +209,11 @@ def generate_opepen_for_token(token_id, output_dir=None):
     cloak_px, _ = decode_blob(get_blob_id(2, cloak_idx)) if cloak_idx > 0 else ({}, [])
     relic_px, _ = decode_blob(get_blob_id(3, relic_idx)) if relic_idx > 0 else ({}, [])
     sight_px, _ = decode_blob(get_blob_id(4, sight_idx)) if sight_idx > 0 else ({}, [])
-    mouth_px, _ = decode_blob(get_blob_id(5, mouth_idx)) if mouth_idx > 0 else ({}, [])
+    artifact_px, _ = decode_blob(get_blob_id(5, artifact_idx)) if artifact_idx > 0 else ({}, [])
     crown_px, _ = decode_blob(get_blob_id(6, crown_idx)) if crown_idx > 0 else ({}, [])
 
-    # Composite upright head (rows 5..18)
-    # Paint order: Bones -> Sight -> Cloak -> Relic -> Mouth -> Crown
+    # Composite head pixels:
+    # General head traits (Bones, Sight, Cloak, Relic, Crown) bounded to rows 5..18
     composite_head = {}
     for pt, (c, a) in bone_px.items():
         if 5 <= pt[1] <= 18:
@@ -255,40 +227,57 @@ def generate_opepen_for_token(token_id, output_dir=None):
     for pt, (c, a) in relic_px.items():
         if 5 <= pt[1] <= 18:
             composite_head[pt] = (c, a)
-    for pt, (c, a) in mouth_px.items():
-        if 5 <= pt[1] <= 18:
-            composite_head[pt] = (c, a)
     for pt, (c, a) in crown_px.items():
         if 5 <= pt[1] <= 18:
             composite_head[pt] = (c, a)
 
-    # Right Head (bounded strictly to 14x14 box: gx in 28..41, gy in 14..27)
-    head_right_paths = []
+    # Right Head construction
     head_right_cells = {}
     for (pt_x, pt_y), (c, a) in composite_head.items():
         gx_R = pt_x + 22
         gy_R = pt_y + 9
         if 28 <= gx_R <= 41 and 14 <= gy_R <= 27:
             head_right_cells[(gx_R, gy_R)] = (c, a)
-            x = gx_R * 10
-            y = gy_R * 10
-            path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
-            op_str = f' fill-opacity="{a/255.0:.3f}"' if a < 255 else ''
-            head_right_paths.append(f'<path d="{path_d}" fill="{c}"{op_str}/>\n')
 
-    # Left Head (Anti-diagonal reflection: gx_L = 41 - gy_R, gy_L = 55 - gx_R)
-    head_left_paths = []
+    # Left Head construction (Anti-diagonal reflection)
     head_left_cells = {}
     for (gx_R, gy_R), (c, a) in head_right_cells.items():
         gx_L = 41 - gy_R
         gy_L = 55 - gx_R
         if 14 <= gx_L <= 27 and 14 <= gy_L <= 27:
             head_left_cells[(gx_L, gy_L)] = (c, a)
-            x = gx_L * 10
-            y = gy_L * 10
-            path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
-            op_str = f' fill-opacity="{a/255.0:.3f}"' if a < 255 else ''
-            head_left_paths.append(f'<path d="{path_d}" fill="{c}"{op_str}/>\n')
+
+    # ARTIFACT TRAITS: 100% uncropped and fully visible!
+    # Map all artifact pixels on both Right Head and Left Head
+    for (pt_x, pt_y), (c, a) in artifact_px.items():
+        # Right Head (Full uncropped placement)
+        gx_R = pt_x + 22
+        gy_R = pt_y + 9
+        if 0 <= gx_R < 56 and 0 <= gy_R < 56:
+            head_right_cells[(gx_R, gy_R)] = (c, a)
+
+        # Left Head (Full uncropped anti-diagonal reflection)
+        gx_L = 41 - gy_R
+        gy_L = 55 - gx_R
+        if 0 <= gx_L < 56 and 0 <= gy_L < 56:
+            head_left_cells[(gx_L, gy_L)] = (c, a)
+
+    # Convert cells to vector paths
+    head_right_paths = []
+    for (gx, gy), (c, a) in head_right_cells.items():
+        x = gx * 10
+        y = gy * 10
+        path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
+        op_str = f' fill-opacity="{a/255.0:.3f}"' if a < 255 else ''
+        head_right_paths.append(f'<path d="{path_d}" fill="{c}"{op_str}/>\n')
+
+    head_left_paths = []
+    for (gx, gy), (c, a) in head_left_cells.items():
+        x = gx * 10
+        y = gy * 10
+        path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
+        op_str = f' fill-opacity="{a/255.0:.3f}"' if a < 255 else ''
+        head_left_paths.append(f'<path d="{path_d}" fill="{c}"{op_str}/>\n')
 
     # Body & Base using exact canonical silhouette targets
     rng = random.Random(token_id * 31337 + 42)
@@ -301,6 +290,9 @@ def generate_opepen_for_token(token_id, output_dir=None):
     body_paths = []
     c_idx = 0
     for gx, gy in CANON_BODY_TARGET:
+        # If an artifact pixel exists at this exact coordinate, let the artifact take precedence
+        if (gx, gy) in head_right_cells or (gx, gy) in head_left_cells:
+            continue
         c = shuffled_palette[c_idx]
         c_idx += 1
         x = gx * 10
@@ -310,6 +302,8 @@ def generate_opepen_for_token(token_id, output_dir=None):
 
     base_paths = []
     for gx, gy in CANON_BASE_TARGET:
+        if (gx, gy) in head_right_cells or (gx, gy) in head_left_cells:
+            continue
         c = shuffled_palette[c_idx]
         c_idx += 1
         x = gx * 10
@@ -351,8 +345,25 @@ def generate_opepen_for_token(token_id, output_dir=None):
     # Background
     bg_rgb = hex_to_rgb(bg_color)
     draw.rectangle([0, 0, 560, 560], fill=(*bg_rgb, 255))
-    
-    # Draw heads
+
+    # Draw body & base
+    for i, (gx, gy) in enumerate(CANON_BODY_TARGET):
+        if (gx, gy) in head_right_cells or (gx, gy) in head_left_cells:
+            continue
+        c = shuffled_palette[i]
+        x, y = gx * 10, gy * 10
+        r, g, b = hex_to_rgb(c)
+        draw.rectangle([x, y, x + 10, y + 10], fill=(r, g, b, 255))
+
+    for j, (gx, gy) in enumerate(CANON_BASE_TARGET):
+        if (gx, gy) in head_right_cells or (gx, gy) in head_left_cells:
+            continue
+        c = shuffled_palette[len(CANON_BODY_TARGET) + j]
+        x, y = gx * 10, gy * 10
+        r, g, b = hex_to_rgb(c)
+        draw.rectangle([x, y, x + 10, y + 10], fill=(r, g, b, 255))
+
+    # Draw heads with uncropped artifacts
     for (gx, gy), (fill, a) in head_left_cells.items():
         x, y = gx * 10, gy * 10
         r, g, b = hex_to_rgb(fill)
@@ -363,30 +374,17 @@ def generate_opepen_for_token(token_id, output_dir=None):
         r, g, b = hex_to_rgb(fill)
         draw.rectangle([x, y, x + 10, y + 10], fill=(r, g, b, a))
 
-    # Draw body & base
-    for i, (gx, gy) in enumerate(CANON_BODY_TARGET):
-        c = shuffled_palette[i]
-        x, y = gx * 10, gy * 10
-        r, g, b = hex_to_rgb(c)
-        draw.rectangle([x, y, x + 10, y + 10], fill=(r, g, b, 255))
-
-    for j, (gx, gy) in enumerate(CANON_BASE_TARGET):
-        c = shuffled_palette[len(CANON_BODY_TARGET) + j]
-        x, y = gx * 10, gy * 10
-        r, g, b = hex_to_rgb(c)
-        draw.rectangle([x, y, x + 10, y + 10], fill=(r, g, b, 255))
-
     rgb_img = img.convert('RGB')
     rgb_img.save(jpg_path, 'JPEG', quality=98)
 
-    print(f"[+] SUCCESS: Created Argonaut Opepen with exact canonical silhouette for Token #{token_id}:")
+    print(f"[+] SUCCESS: Created Argonaut Opepen with full uncropped Artifact trait for Token #{token_id}:")
     print(f"    SVG: {svg_path}")
     print(f"    JPG: {jpg_path}")
     return svg_path, jpg_path
 
 def main():
     parser = argparse.ArgumentParser(description="Convert any on-chain Argonaut token into an Argonaut Opepen.")
-    parser.add_argument('tokens', nargs='*', type=int, help="Token ID(s) to convert (e.g. 1 42 777 9999)")
+    parser.add_argument('tokens', nargs='*', type=int, help="Token ID(s) to convert (e.g. 1 3 5 42 777 9999)")
     parser.add_argument('--out', type=str, default="custom_opepens", help="Output directory for generated files")
     args = parser.parse_args()
 

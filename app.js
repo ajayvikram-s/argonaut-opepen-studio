@@ -1,6 +1,7 @@
 /**
  * ARGONAUT × OPEPEN STUDIO
  * Minimalist Black & White On-Chain Synthesizer & Vector Renderer
+ * Guarantees 100% full visibility for Artifact traits (Woodpipe, THC Vape, Smoke)
  */
 
 // Trait category dictionaries
@@ -170,7 +171,6 @@ async function fetchTokenMetadata(tokenId) {
       const resJson = await resp.json();
       if (resJson && resJson.result && resJson.result !== '0x') {
         const rawHex = resJson.result.slice(2);
-        // decode ABI string offset
         const offBytes = parseInt(rawHex.substr(0, 64), 16);
         const lenBytes = parseInt(rawHex.substr(offBytes * 2, 64), 16);
         const hexStr = rawHex.substr((offBytes + 32) * 2, lenBytes * 2);
@@ -207,7 +207,7 @@ function synthesizeOpepen(tokenId, meta) {
   const crownName = attrMap['Crown'] || '';
   const cloakName = attrMap['Cloak'] || '';
   const relicName = attrMap['Relic'] || '';
-  const mouthName = attrMap['Artifact'] || '';
+  const artifactName = attrMap['Artifact'] || '';
 
   // 1. Get Trait Indices
   const bgIdx = getTraitIndex('Palette', bgName);
@@ -216,7 +216,7 @@ function synthesizeOpepen(tokenId, meta) {
   const crownIdx = getTraitIndex('Crown', crownName);
   const cloakIdx = getTraitIndex('Cloak', cloakName);
   const relicIdx = getTraitIndex('Relic', relicName);
-  const mouthIdx = getTraitIndex('Artifact', mouthName);
+  const artifactIdx = getTraitIndex('Artifact', artifactName);
 
   // 2. Decode Blobs
   const bgDecoded = decodeBlob(getBlobId(0, bgIdx));
@@ -227,20 +227,19 @@ function synthesizeOpepen(tokenId, meta) {
   const crownDecoded = crownIdx > 0 ? decodeBlob(getBlobId(6, crownIdx)) : { pixels: {} };
   const cloakDecoded = cloakIdx > 0 ? decodeBlob(getBlobId(2, cloakIdx)) : { pixels: {} };
   const relicDecoded = relicIdx > 0 ? decodeBlob(getBlobId(3, relicIdx)) : { pixels: {} };
-  const mouthDecoded = mouthIdx > 0 ? decodeBlob(getBlobId(5, mouthIdx)) : { pixels: {} };
+  const artifactDecoded = artifactIdx > 0 ? decodeBlob(getBlobId(5, artifactIdx)) : { pixels: {} };
 
-  // 3. Composite upright head (rows 5..18, cols 6..19)
+  // 3. Composite upright head (bounded general traits to rows 5..18)
   const compositeHead = {};
-  const layers = [
+  const generalLayers = [
     boneDecoded.pixels,
     sightDecoded.pixels,
     cloakDecoded.pixels,
     relicDecoded.pixels,
-    mouthDecoded.pixels,
     crownDecoded.pixels
   ];
 
-  layers.forEach(pxMap => {
+  generalLayers.forEach(pxMap => {
     Object.keys(pxMap).forEach(k => {
       const [px, py] = k.split(',').map(Number);
       if (py >= 5 && py <= 18) {
@@ -249,40 +248,68 @@ function synthesizeOpepen(tokenId, meta) {
     });
   });
 
-  // 4. Build Right Head (gx in 28..41, gy in 14..27)
-  const headRightPaths = [];
+  // 4. Build Right Head (Bounded for general traits)
   const headRightCells = {};
-
   Object.keys(compositeHead).forEach(k => {
     const [pt_x, pt_y] = k.split(',').map(Number);
     const gx_R = pt_x + 22;
     const gy_R = pt_y + 9;
     if (gx_R >= 28 && gx_R <= 41 && gy_R >= 14 && gy_R <= 27) {
-      const { color, alpha } = compositeHead[k];
-      headRightCells[`${gx_R},${gy_R}`] = { color, alpha };
-      const x = gx_R * 10;
-      const y = gy_R * 10;
-      const opStr = alpha < 255 ? ` fill-opacity="${(alpha / 255).toFixed(3)}"` : '';
-      headRightPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${color}"${opStr}/>`);
+      headRightCells[`${gx_R},${gy_R}`] = compositeHead[k];
     }
   });
 
-  // 5. Build Left Head (Anti-diagonal reflection: gx_L = 41 - gy_R, gy_L = 55 - gx_R)
-  const headLeftPaths = [];
+  // 5. Build Left Head (Anti-diagonal reflection for general traits)
+  const headLeftCells = {};
   Object.keys(headRightCells).forEach(k => {
     const [gx_R, gy_R] = k.split(',').map(Number);
     const gx_L = 41 - gy_R;
     const gy_L = 55 - gx_R;
     if (gx_L >= 14 && gx_L <= 27 && gy_L >= 14 && gy_L <= 27) {
-      const { color, alpha } = headRightCells[k];
-      const x = gx_L * 10;
-      const y = gy_L * 10;
-      const opStr = alpha < 255 ? ` fill-opacity="${(alpha / 255).toFixed(3)}"` : '';
-      headLeftPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${color}"${opStr}/>`);
+      headLeftCells[`${gx_L},${gy_L}`] = headRightCells[k];
     }
   });
 
-  // 6. Body & Base Organic Sampling from on-chain bone palette
+  // 6. ARTIFACT TRAITS (Woodpipe, THC Vape / Smoke): 100% uncropped & fully visible!
+  Object.keys(artifactDecoded.pixels).forEach(k => {
+    const [pt_x, pt_y] = k.split(',').map(Number);
+    // Right Head (Full uncropped placement)
+    const gx_R = pt_x + 22;
+    const gy_R = pt_y + 9;
+    if (gx_R >= 0 && gx_R < 56 && gy_R >= 0 && gy_R < 56) {
+      headRightCells[`${gx_R},${gy_R}`] = artifactDecoded.pixels[k];
+    }
+
+    // Left Head (Full uncropped anti-diagonal reflection)
+    const gx_L = 41 - gy_R;
+    const gy_L = 55 - gx_R;
+    if (gx_L >= 0 && gx_L < 56 && gy_L >= 0 && gy_L < 56) {
+      headLeftCells[`${gx_L},${gy_L}`] = artifactDecoded.pixels[k];
+    }
+  });
+
+  // Convert cells to paths
+  const headRightPaths = [];
+  Object.keys(headRightCells).forEach(k => {
+    const [gx, gy] = k.split(',').map(Number);
+    const { color, alpha } = headRightCells[k];
+    const x = gx * 10;
+    const y = gy * 10;
+    const opStr = alpha < 255 ? ` fill-opacity="${(alpha / 255).toFixed(3)}"` : '';
+    headRightPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${color}"${opStr}/>`);
+  });
+
+  const headLeftPaths = [];
+  Object.keys(headLeftCells).forEach(k => {
+    const [gx, gy] = k.split(',').map(Number);
+    const { color, alpha } = headLeftCells[k];
+    const x = gx * 10;
+    const y = gy * 10;
+    const opStr = alpha < 255 ? ` fill-opacity="${(alpha / 255).toFixed(3)}"` : '';
+    headLeftPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${color}"${opStr}/>`);
+  });
+
+  // 7. Body & Base Organic Sampling from on-chain bone palette
   const bonePalette = boneDecoded.palette.length ? boneDecoded.palette : ["#DCD4D0", "#BDB9B8", "#8D8B8A", "#6A6866"];
   const rng = seededRandom(tokenId * 31337 + 42);
 
@@ -298,6 +325,8 @@ function synthesizeOpepen(tokenId, meta) {
 
   const bodyPaths = [];
   CANON_BODY_TARGET.forEach(([gx, gy], i) => {
+    // Avoid double-rendering if artifact overlaps
+    if (headRightCells[`${gx},${gy}`] || headLeftCells[`${gx},${gy}`]) return;
     const c = shuffledPalette[i];
     const x = gx * 10;
     const y = gy * 10;
@@ -306,6 +335,7 @@ function synthesizeOpepen(tokenId, meta) {
 
   const basePaths = [];
   CANON_BASE_TARGET.forEach(([gx, gy], j) => {
+    if (headRightCells[`${gx},${gy}`] || headLeftCells[`${gx},${gy}`]) return;
     const c = shuffledPalette[CANON_BODY_TARGET.length + j];
     const x = gx * 10;
     const y = gy * 10;
@@ -328,6 +358,7 @@ ${basePaths.join('\n')}
       paletteHex: bgColor,
       bones: bonesName,
       sight: sightName || 'None',
+      artifact: artifactName || 'None',
       crown: crownName || 'None',
       cloak: cloakName || 'None',
       relic: relicName || 'None'
@@ -390,12 +421,16 @@ async function loadToken(tokenId) {
 
     // Update Header Badges
     document.getElementById('opepen-badge').textContent = `OPEPEN #${tokenId.toString().padStart(4, '0')}`;
-    document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE`;
+    const artLabel = traits.artifact !== 'None' ? ` • ${traits.artifact.toUpperCase()}` : '';
+    document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE${artLabel}`;
 
     // Update Inspector Traits
     document.getElementById('meta-bones').textContent = traits.bones;
     document.getElementById('meta-palette').textContent = `${traits.palette} (${traits.paletteHex})`;
     document.getElementById('meta-sight').textContent = traits.sight;
+    if (document.getElementById('meta-artifact')) {
+      document.getElementById('meta-artifact').textContent = traits.artifact;
+    }
     document.getElementById('meta-crown').textContent = traits.crown;
     document.getElementById('meta-cloak').textContent = traits.cloak;
     document.getElementById('meta-relic').textContent = traits.relic;
@@ -469,11 +504,11 @@ function exportJSON() {
   if (!currentMetadata) return;
   const opepenMeta = {
     name: `Argonaut Opepen #${currentTokenId.toString().padStart(4, '0')}`,
-    description: `Synthesized on-chain Argonaut Opepen with dual-head anti-diagonal symmetry, 380-pixel tapered torso, and zero pixel overlaps.`,
+    description: `Synthesized on-chain Argonaut Opepen with uncropped Artifact traits, dual-head anti-diagonal symmetry, 380-pixel tapered torso, and zero pixel overlaps.`,
     attributes: [
       ...(currentMetadata.attributes || []),
       { trait_type: "Style", value: "Argonaut Opepen" },
-      { trait_type: "Silhouette", value: "Canonical Tapered" },
+      { trait_type: "Silhouette", value: "Canonical Tapered (Uncropped Artifacts)" },
       { trait_type: "Dimensions", value: "560x560" }
     ]
   };
@@ -491,15 +526,15 @@ function exportJSON() {
 const CURATED_EDITIONS = [
   { id: 1, name: "Cyber Alien Opepen", bone: "Alien", pal: "Void", traits: { Palette: "Void", Bones: "Alien", Sight: "3D Glasses" } },
   { id: 2, name: "Radioactive Void Opepen", bone: "Radioactive", pal: "Charcoal", traits: { Palette: "Radioactive Void Charcoal", Bones: "Radioactive", Sight: "Digital" } },
-  { id: 3, name: "Celestial Gold Opepen", bone: "Gold", pal: "Violet", traits: { Palette: "Violet", Bones: "Gold", Sight: "3D Glasses", Crown: "Golden Fleece" } },
+  { id: 3, name: "Celestial Gold Opepen", bone: "Gold", pal: "Violet", traits: { Palette: "Violet", Bones: "Gold", Sight: "3D Glasses", Crown: "Golden Fleece", Artifact: "Woodpipe" } },
   { id: 4, name: "Liquid Silver Opepen", bone: "Silver", pal: "Void", traits: { Palette: "Void", Bones: "Silver", Sight: "Shades" } },
-  { id: 5, name: "Abyssal Coral Opepen", bone: "Coral", pal: "Punkblue", traits: { Palette: "Punkblue", Bones: "Coral", Sight: "Designer" } },
+  { id: 5, name: "Abyssal Coral Opepen", bone: "Coral", pal: "Punkblue", traits: { Palette: "Punkblue", Bones: "Coral", Sight: "Designer", Artifact: "Woodpipe" } },
   { id: 6, name: "Ancient Petrified Opepen", bone: "Petrified", pal: "Storm", traits: { Palette: "Storm", Bones: "Petrified", Crown: "Purphat" } },
   { id: 7, name: "Volcanic Prehistoric", bone: "Prehistoric", pal: "Wine", traits: { Palette: "Wine", Bones: "Prehistoric", Sight: "Eye Patch" } },
   { id: 8, name: "Clergy Bone Opepen", bone: "Bone", pal: "Ancient", traits: { Palette: "Ancient", Bones: "Bone", Cloak: "Clergy" } },
   { id: 9, name: "Neon Mint Floral", bone: "Floral", pal: "Neon Mint", traits: { Palette: "Neon Mint", Bones: "Floral", Sight: "3D Glasses" } },
   { id: 10, name: "Hot Rose Alien", bone: "Alien", pal: "Hot Rose", traits: { Palette: "Hot Rose", Bones: "Alien", Sight: "Shades" } },
-  { id: 11, name: "Deep Raspberry Radio", bone: "Radioactive", pal: "Raspberry", traits: { Palette: "Radioactive Deep Raspberry", Bones: "Radioactive", Sight: "Designer" } },
+  { id: 11, name: "Deep Raspberry Radio", bone: "Radioactive", pal: "Raspberry", traits: { Palette: "Radioactive Deep Raspberry", Bones: "Radioactive", Sight: "Designer", Artifact: "Woodpipe" } },
   { id: 12, name: "Emerald Gold Opepen", bone: "Gold", pal: "Emerald", traits: { Palette: "Emerald", Bones: "Gold", Sight: "3D Glasses" } },
   { id: 13, name: "Bubblegum Silver", bone: "Silver", pal: "Bubblegum", traits: { Palette: "Bubblegum", Bones: "Silver", Sight: "Glasses" } },
   { id: 14, name: "Bright Lilac Coral", bone: "Coral", pal: "Bright Lilac", traits: { Palette: "Bright Lilac", Bones: "Coral", Crown: "Aegean Blue Beanie" } },
@@ -549,11 +584,15 @@ window.loadCurated = function(idx) {
 
   document.getElementById('opepen-canvas-container').innerHTML = svg;
   document.getElementById('opepen-badge').textContent = `OPEPEN #${item.id.toString().padStart(4, '0')}`;
-  document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE`;
+  const artLabel = traits.artifact !== 'None' ? ` • ${traits.artifact.toUpperCase()}` : '';
+  document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE${artLabel}`;
 
   document.getElementById('meta-bones').textContent = traits.bones;
   document.getElementById('meta-palette').textContent = `${traits.palette} (${traits.paletteHex})`;
   document.getElementById('meta-sight').textContent = traits.sight;
+  if (document.getElementById('meta-artifact')) {
+    document.getElementById('meta-artifact').textContent = traits.artifact;
+  }
   document.getElementById('meta-crown').textContent = traits.crown;
   document.getElementById('meta-cloak').textContent = traits.cloak;
   document.getElementById('meta-relic').textContent = traits.relic;
@@ -563,7 +602,6 @@ window.loadCurated = function(idx) {
 
 // Event Listeners setup
 function setupEventListeners() {
-  // Input trigger
   document.getElementById('btn-generate').addEventListener('click', () => {
     const val = parseInt(document.getElementById('token-id-input').value, 10);
     if (!isNaN(val) && val >= 1 && val <= 9999) {
@@ -582,7 +620,6 @@ function setupEventListeners() {
     }
   });
 
-  // Preset Pills
   document.querySelectorAll('.preset-pill[data-id]').forEach(pill => {
     pill.addEventListener('click', () => {
       const id = parseInt(pill.dataset.id, 10);
@@ -590,13 +627,11 @@ function setupEventListeners() {
     });
   });
 
-  // Random Button
   document.getElementById('btn-random').addEventListener('click', () => {
     const randId = Math.floor(Math.random() * 9999) + 1;
     loadToken(randId);
   });
 
-  // Toggle Grid
   document.getElementById('toggle-grid-btn').addEventListener('click', function() {
     isGridVisible = !isGridVisible;
     this.classList.toggle('active', isGridVisible);
@@ -604,14 +639,12 @@ function setupEventListeners() {
     showToast(isGridVisible ? '10px Grid Enabled' : 'Grid Disabled');
   });
 
-  // Toggle Split View
   document.getElementById('toggle-split-btn').addEventListener('click', function() {
     isSplitVisible = !isSplitVisible;
     this.classList.toggle('active', isSplitVisible);
     document.getElementById('original-token-container').style.display = isSplitVisible ? 'block' : 'none';
   });
 
-  // Downloads
   document.getElementById('btn-download-svg').addEventListener('click', downloadSVG);
   document.getElementById('btn-download-jpg').addEventListener('click', () => downloadImage('jpeg', 2));
   document.getElementById('btn-download-png').addEventListener('click', () => downloadImage('png', 2));

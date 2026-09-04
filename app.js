@@ -271,6 +271,22 @@ async function fetchTokenMetadata(tokenId) {
 
 // Generate Argonaut Opepen from Token following strict contract paint order
 function synthesizeOpepen(tokenId, meta) {
+  // If this token is one of the 5 canonical Smart Contract Cloak master archetypes, return the exact master SVG
+  const tidNum = Number(tokenId);
+  if (window.CLOAK_MASTER_SVGS && window.CLOAK_MASTER_SVGS[tidNum]) {
+    const rawSvg = window.CLOAK_MASTER_SVGS[tidNum];
+    const bgMatch = rawSvg.match(/fill="([^"]+)"/);
+    const bgColor = bgMatch ? bgMatch[1] : "#141414";
+    const resolvedMeta = meta || getOfflineTokenTraits(tidNum) || { name: `Argonaut #${tidNum}`, attributes: [] };
+    const palAttr = resolvedMeta.attributes ? resolvedMeta.attributes.find(a => a.trait_type === 'Palette') : null;
+    return {
+      svg: rawSvg,
+      metadata: resolvedMeta,
+      bgColor: bgColor,
+      paletteName: palAttr ? palAttr.value : 'Custom'
+    };
+  }
+
   const attrMap = {};
   if (meta && meta.attributes) {
     meta.attributes.forEach(a => {
@@ -505,11 +521,25 @@ function synthesizeOpepen(tokenId, meta) {
     shuffledPalette.push(...tmp);
   }
 
+  const cloakBodyMap = (window.CLOAK_BODY_MAPS && window.CLOAK_BODY_MAPS[cloakIdx]) || null;
+  const cloakNeckMap = (window.CLOAK_NECK_MAPS && window.CLOAK_NECK_MAPS[cloakIdx]) || null;
+
+  if (cloakIdx > 0 && cloakNeckMap) {
+    Object.keys(cloakNeckMap).forEach(k => {
+      if (!headCombined[k]) {
+        headCombined[k] = { color: cloakNeckMap[k], alpha: 255 };
+      }
+    });
+  }
+
   const bodyPaths = [];
   let cIdx = 0;
   CANON_BODY_TARGET.forEach(([gx, gy]) => {
     if (headCombined[`${gx},${gy}`]) return; // Avoid duplicate overlapping pixels
-    const c = cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++];
+    const coordKey = `${gx},${gy}`;
+    const c = (cloakIdx > 0 && cloakBodyMap && cloakBodyMap[coordKey])
+      ? cloakBodyMap[coordKey]
+      : (cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++]);
     const x = gx * 10;
     const y = gy * 10;
     bodyPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${c}"/>`);
@@ -518,7 +548,10 @@ function synthesizeOpepen(tokenId, meta) {
   const basePaths = [];
   CANON_BASE_TARGET.forEach(([gx, gy]) => {
     if (headCombined[`${gx},${gy}`]) return; // Avoid duplicate overlapping pixels
-    const c = cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++];
+    const coordKey = `${gx},${gy}`;
+    const c = (cloakIdx > 0 && cloakBodyMap && cloakBodyMap[coordKey])
+      ? cloakBodyMap[coordKey]
+      : (cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++]);
     const x = gx * 10;
     const y = gy * 10;
     basePaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${c}"/>`);
@@ -706,42 +739,42 @@ function exportJSON() {
   showToast('Exported Metadata JSON');
 }
 
-// 5 Smart Contract Cloaks Master Suite (Option 3 Dual-Wing Sweep locked)
+// 5 Smart Contract Cloaks Master Suite (Exact Canonical Master Archetypes)
 const SMART_CONTRACT_CLOAKS = [
   {
     id: 125,
     name: "Servant Argonaut Opepen",
     cloak: "Servant",
     cloakIdx: 1,
-    material: "Silver Grey Velvet",
-    drape: "Option 3 Dual-Wing Sweep (#E6E6E6 cascade, #B8B4B0 flanks)",
-    traits: { Palette: "Ancient", Bones: "Bone", Cloak: "Servant" }
+    material: "Silver Grey & Charcoal Velvet",
+    drape: "Authentic Master Contract Servant Cloak (564 px drape)",
+    traits: { Palette: "Bubblegum", Bones: "Bone", Cloak: "Servant", Sight: "Chanel", Artifact: "THC Vape" }
   },
   {
     id: 28,
     name: "Death Argonaut Opepen",
     cloak: "Death",
     cloakIdx: 2,
-    material: "Obsidian Black Velvet",
-    drape: "Option 3 Dual-Wing Sweep (#24252C cascade, #131316 flanks)",
-    traits: { Palette: "Void", Bones: "Bone", Cloak: "Death" }
+    material: "Obsidian Void Velvet",
+    drape: "Authentic Master Contract Death Cloak (564 px drape)",
+    traits: { Palette: "Punkblue", Bones: "Floral II", Cloak: "Death", Sight: "3D Glasses", Artifact: "THC Vape" }
   },
   {
     id: 107,
     name: "Royalty Argonaut Opepen",
     cloak: "Royalty",
     cloakIdx: 3,
-    material: "Imperial Purple Velvet",
-    drape: "Option 3 Dual-Wing Sweep (#4A2C6E cascade, #2D1842 flanks)",
-    traits: { Palette: "Ancient", Bones: "Bone", Cloak: "Royalty" }
+    material: "Imperial Tyrian Purple Velvet",
+    drape: "Authentic Master Contract Royalty Cloak (564 px drape)",
+    traits: { Palette: "Offwhite", Bones: "Bone", Cloak: "Royalty", Relic: "Gold", Sight: "Louis Vuitton", Artifact: "Woodpipe" }
   },
   {
     id: 18,
     name: "Ivory Argonaut Opepen",
     cloak: "Ivory",
     cloakIdx: 4,
-    material: "Antique Ivory Silk",
-    drape: "Option 3 Dual-Wing Sweep (#E8E2D2 cascade, #B8B2A2 flanks)",
+    material: "Alabaster Silk & Ermine Weave",
+    drape: "Authentic Master Contract Ivory Cloak (564 px drape)",
     traits: { Palette: "Blush", Bones: "Bone", Cloak: "Ivory", Sight: "Shades" }
   },
   {
@@ -750,7 +783,7 @@ const SMART_CONTRACT_CLOAKS = [
     cloak: "Clergy",
     cloakIdx: 5,
     material: "Crimson Wine Velvet",
-    drape: "Option 3 Dual-Wing Sweep (#992F47 cascade, #88283E flanks)",
+    drape: "Authentic Master Contract Clergy Cloak (cloak svg.svg)",
     traits: { Palette: "Punkblue", Bones: "Bone", Cloak: "Clergy", Relic: "Gold", Sight: "Eye Patch" }
   }
 ];

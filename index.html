@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260905_minimal_v2">
+  <link rel="stylesheet" href="styles.css?v=20260905_dualside_v3">
 </head>
 <body>
   <div class="app-container">
@@ -38,20 +38,24 @@
             <span class="badge-sep">/</span>
             <span id="trait-summary-badge" class="badge-trait">PUNKBLUE • CLERGY</span>
           </div>
-          <div class="canvas-toggles">
-            <button id="toggle-grid-btn" class="toggle-btn" title="Toggle 10px Grid">GRID</button>
-            <button id="toggle-split-btn" class="toggle-btn" title="Compare Token">COMPARE</button>
-          </div>
         </div>
 
-        <!-- Canvas Viewport (Auto-Fitted) -->
+        <!-- Canvas Viewport (Side-by-Side Dual Stage: Original Argonaut & Argonaut Opepen) -->
         <div class="canvas-frame" id="viewport">
-          <div id="opepen-canvas-container" class="svg-stage"></div>
-          
-          <!-- Split Compare Container -->
-          <div id="original-token-container" class="original-stage" style="display:none;">
-            <div class="stage-tag">ORIGINAL ON-CHAIN TOKEN</div>
-            <div id="orig-svg-wrapper" class="orig-wrapper"></div>
+          <div class="preview-item">
+            <div class="preview-header">
+              <span class="preview-tag">ORIGINAL ARGONAUT</span>
+              <span class="preview-dim">24 × 24</span>
+            </div>
+            <div id="orig-svg-wrapper" class="svg-stage"></div>
+          </div>
+          <div class="preview-divider"></div>
+          <div class="preview-item">
+            <div class="preview-header">
+              <span class="preview-tag">ARGONAUT OPEPEN</span>
+              <span class="preview-dim">560 × 560</span>
+            </div>
+            <div id="opepen-canvas-container" class="svg-stage"></div>
           </div>
         </div>
 
@@ -189,7 +193,7 @@
   <div id="toast" class="toast"></div>
 
   <!-- Engine Data & Application Scripts -->
-  <script src="engine_data.js?v=20260905_minimal_v2"></script>
-  <script src="app.js?v=20260905_minimal_v2"></script>
+  <script src="engine_data.js?v=20260905_dualside_v3"></script>
+  <script src="app.js?v=20260905_dualside_v3"></script>
 </body>
 </html>

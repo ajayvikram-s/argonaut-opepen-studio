@@ -152,6 +152,183 @@ combinations = [
     (7, 4, 3, 0, 6, 0, 6, "20_Ancient_Floral_Royalty_Opepen", "Ancient", "Floral", "Designer", "Golden Fleece")
 ]
 
+CLOAK_BODY_PALETTES = {
+    1: {
+        "name": "Servant",
+        "SPEC_HI": "#FFFFFF",
+        "SOFT_HI": "#E6E6E6",
+        "ROSE_HI": "#DDDDDD",
+        "MID_TONE": "#D6D3D1",
+        "BERRY_MID": "#C8C4C0",
+        "ROSE_MID": "#B8B4B0",
+        "DEEP_ROSE": "#A9A9A9",
+        "PLUM_SHD": "#979797"
+    },
+    2: {
+        "name": "Death",
+        "SPEC_HI": "#2E2F38",
+        "SOFT_HI": "#24252C",
+        "ROSE_HI": "#1E1F24",
+        "MID_TONE": "#1A1B20",
+        "BERRY_MID": "#17171B",
+        "ROSE_MID": "#131316",
+        "DEEP_ROSE": "#0D0D10",
+        "PLUM_SHD": "#09090B"
+    },
+    3: {
+        "name": "Royalty",
+        "SPEC_HI": "#5A3686",
+        "SOFT_HI": "#4A2C6E",
+        "ROSE_HI": "#432864",
+        "MID_TONE": "#3C2358",
+        "BERRY_MID": "#351E4E",
+        "ROSE_MID": "#2D1842",
+        "DEEP_ROSE": "#29173C",
+        "PLUM_SHD": "#241334"
+    },
+    4: {
+        "name": "Ivory",
+        "SPEC_HI": "#FFF9EB",
+        "SOFT_HI": "#E8E2D2",
+        "ROSE_HI": "#DDD7C7",
+        "MID_TONE": "#D1CBBB",
+        "BERRY_MID": "#C4BEAE",
+        "ROSE_MID": "#B8B2A2",
+        "DEEP_ROSE": "#B2AC9D",
+        "PLUM_SHD": "#A39D8E"
+    },
+    5: {
+        "name": "Clergy",
+        "SPEC_HI": "#A7344E",
+        "SOFT_HI": "#992F47",
+        "ROSE_HI": "#9D3049",
+        "MID_TONE": "#8C2A40",
+        "BERRY_MID": "#8F2B42",
+        "ROSE_MID": "#88283E",
+        "DEEP_ROSE": "#7E2439",
+        "PLUM_SHD": "#691C2E"
+    }
+}
+
+def get_bright_cloth_pixel(gx, gy, cloak_idx):
+    pal = CLOAK_BODY_PALETTES.get(cloak_idx, CLOAK_BODY_PALETTES[5])
+
+    # Option 3: Dual-Wing Drapery Sweep Accents (Curving down toward center waist)
+    if gy in (29, 30) and gx in (17, 18):
+        return pal["SOFT_HI"]
+    if gy in (32, 33) and gx in (18, 19):
+        return pal["SOFT_HI"]
+    if gy in (34, 35) and gx in (19, 20):
+        return pal["SOFT_HI"]
+    if gy in (32, 33) and gx in (27, 28):
+        return pal["ROSE_MID"]
+    if gy in (34, 35) and gx in (26, 27):
+        return pal["ROSE_MID"]
+
+    dist = abs(gx - 13.5)
+    
+    if 28 <= gy <= 41:
+        if gy in (28, 29, 30):
+            if dist > 9.5:
+                return pal["PLUM_SHD"]
+            elif dist > 7.0:
+                return pal["SPEC_HI"]
+            elif dist > 4.5:
+                return pal["SOFT_HI"]
+            elif dist > 1.5:
+                return pal["MID_TONE"]
+            else:
+                return pal["ROSE_MID"]
+        elif 31 <= gy <= 33:
+            if dist > 11.5:
+                return pal["PLUM_SHD"]
+            elif dist > 9.5:
+                return pal["DEEP_ROSE"]
+            elif dist > 8.0:
+                return pal["ROSE_MID"]
+            elif dist > 5.5:
+                return pal["SOFT_HI"]
+            elif dist > 2.0:
+                return pal["MID_TONE"]
+            else:
+                return pal["BERRY_MID"]
+        elif 34 <= gy <= 38:
+            if dist > 11.5:
+                return pal["PLUM_SHD"]
+            elif dist > 9.0:
+                return pal["DEEP_ROSE"]
+            elif dist > 7.5:
+                return pal["ROSE_MID"]
+            elif dist > 4.5:
+                if gy in (36, 37) and 5.5 <= dist <= 7.0:
+                    return pal["SOFT_HI"]
+                return pal["MID_TONE"]
+            elif dist > 1.5:
+                return pal["MID_TONE"]
+            else:
+                return pal["BERRY_MID"]
+        elif gy == 39:
+            if dist > 10.5:
+                return pal["DEEP_ROSE"]
+            elif dist > 8.5:
+                return pal["ROSE_MID"]
+            elif dist > 1.5:
+                return pal["MID_TONE"]
+            else:
+                return pal["BERRY_MID"]
+        elif gy == 40:
+            if dist > 9.5:
+                return pal["PLUM_SHD"]
+            elif dist > 7.5:
+                return pal["DEEP_ROSE"]
+            elif dist > 5.5:
+                return pal["ROSE_MID"]
+            else:
+                return pal["MID_TONE"]
+        elif gy == 41:
+            if dist > 6.0:
+                return pal["PLUM_SHD"]
+            elif dist > 3.0:
+                return pal["DEEP_ROSE"]
+            else:
+                return pal["ROSE_MID"]
+
+    elif 49 <= gy <= 55:
+        if gy == 49:
+            if dist > 7.5:
+                return pal["DEEP_ROSE"]
+            elif dist > 5.0:
+                return pal["SOFT_HI"]
+            elif dist > 1.5:
+                return pal["MID_TONE"]
+            else:
+                return pal["SOFT_HI"]
+        elif gy == 50:
+            if dist > 9.0:
+                return pal["DEEP_ROSE"]
+            elif dist > 6.5:
+                return pal["SOFT_HI"]
+            else:
+                return pal["MID_TONE"]
+        elif 51 <= gy <= 54:
+            if dist > 11.0:
+                return pal["PLUM_SHD"]
+            elif dist > 9.0:
+                return pal["DEEP_ROSE"]
+            elif dist > 7.0:
+                return pal["ROSE_MID"]
+            else:
+                return pal["MID_TONE"]
+        elif gy == 55:
+            if dist > 8.0:
+                return pal["PLUM_SHD"]
+            elif dist > 4.0:
+                return pal["DEEP_ROSE"]
+            else:
+                return pal["ROSE_MID"]
+
+    return pal["MID_TONE"]
+
 print(f"Generating {len(combinations)} distinct Argonaut Opepens...")
 
 results = []
@@ -194,33 +371,37 @@ for idx, item in enumerate(combinations):
         if 5 <= pt[1] <= 18:
             composite_head[pt] = (c, a)
             
-    # Right Head (bounded strictly to 14x14 box: gx in 28..41, gy in 14..27)
-    head_right_paths = []
+    # Right Head (with full collar drape for cloaks)
     head_right_cells = {}
+    max_gy = 32 if hoodie_idx > 0 else 27
+    min_gx = 14 if hoodie_idx > 0 else 28
+    min_gy = 9 if hoodie_idx > 0 else 14
     for (pt_x, pt_y), (c, a) in composite_head.items():
         gx_R = pt_x + 22
         gy_R = pt_y + 9
-        if 28 <= gx_R <= 41 and 14 <= gy_R <= 27:
+        if min_gx <= gx_R <= 41 and min_gy <= gy_R <= max_gy:
             head_right_cells[(gx_R, gy_R)] = (c, a)
-            x = gx_R * 10
-            y = gy_R * 10
-            path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
-            op_str = f' fill-opacity="{a/255.0:.3f}"' if a < 255 else ''
-            head_right_paths.append(f'<path d="{path_d}" fill="{c}"{op_str}/>\n')
             
-    # Left Head (Anti-diagonal reflection: gx_L = 41 - gy_R, gy_L = 55 - gx_R)
-    head_left_paths = []
+    # Left Head (Anti-diagonal reflection: strictly cropped to gx_L >= 14)
+    head_left_cells = {}
     for (gx_R, gy_R), (c, a) in head_right_cells.items():
         gx_L = 41 - gy_R
         gy_L = 55 - gx_R
-        if 14 <= gx_L <= 27 and 14 <= gy_L <= 27:
-            x = gx_L * 10
-            y = gy_L * 10
-            path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
-            op_str = f' fill-opacity="{a/255.0:.3f}"' if a < 255 else ''
-            head_left_paths.append(f'<path d="{path_d}" fill="{c}"{op_str}/>\n')
+        if 14 <= gx_L <= 41 and 14 <= gy_L <= 55:
+            head_left_cells[(gx_L, gy_L)] = (c, a)
+
+    # Merge left & right head cells cleanly so no cell is duplicated
+    head_combined = dict(head_left_cells)
+    head_combined.update(head_right_cells)
+
+    head_paths = []
+    for (gx, gy), (c, a) in head_combined.items():
+        x = gx * 10
+        y = gy * 10
+        op_str = f' fill-opacity="{a/255.0:.3f}"' if a < 255 else ''
+        head_paths.append(f'<path d="M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z" fill="{c}"{op_str}/>\n')
             
-    # Body & Base from on-chain bone palette
+    # Body & Base from on-chain bone palette or locked cloth drapery
     rng = random.Random(idx * 100 + 42)
     shuffled_palette = []
     while len(shuffled_palette) < len(body_cells_target) + len(base_cells_target) + 200:
@@ -231,8 +412,11 @@ for idx, item in enumerate(combinations):
     body_paths = []
     c_idx = 0
     for gx, gy in body_cells_target:
-        c = shuffled_palette[c_idx]
-        c_idx += 1
+        if (gx, gy) in head_combined:
+            continue
+        c = get_bright_cloth_pixel(gx, gy, hoodie_idx) if hoodie_idx > 0 else shuffled_palette[c_idx]
+        if hoodie_idx == 0:
+            c_idx += 1
         x = gx * 10
         y = gy * 10
         path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
@@ -240,8 +424,11 @@ for idx, item in enumerate(combinations):
         
     base_paths = []
     for gx, gy in base_cells_target:
-        c = shuffled_palette[c_idx]
-        c_idx += 1
+        if (gx, gy) in head_combined:
+            continue
+        c = get_bright_cloth_pixel(gx, gy, hoodie_idx) if hoodie_idx > 0 else shuffled_palette[c_idx]
+        if hoodie_idx == 0:
+            c_idx += 1
         x = gx * 10
         y = gy * 10
         path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
@@ -252,8 +439,7 @@ for idx, item in enumerate(combinations):
     svg_str = (
         '<svg width="560" height="560" viewBox="0 0 560 560" fill="none" xmlns="http://www.w3.org/2000/svg">\n'
         + bg_path
-        + ''.join(head_left_paths)
-        + ''.join(head_right_paths)
+        + ''.join(head_paths)
         + ''.join(body_paths)
         + ''.join(base_paths)
         + '</svg>\n'

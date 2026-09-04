@@ -269,6 +269,98 @@ async function fetchTokenMetadata(tokenId) {
   return null;
 }
 
+// Render 24x24 blob rects for on-chain Argonaut
+function renderBlobRects(blob) {
+  if (!blob) return '';
+  const p = (blob[0] << 8) | blob[1];
+  let off = 2 + p * 4;
+  let pixel = 0;
+  const rects = [];
+  while (off < blob.length) {
+    const ci = (blob[off] << 8) | blob[off + 1];
+    const run = blob[off + 2];
+    if (ci !== 0) {
+      const e = 2 + (ci - 1) * 4;
+      const r = blob[e], g = blob[e + 1], b = blob[e + 2], a = blob[e + 3];
+      const hexColor = (r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0')).toLowerCase();
+      const x = pixel % 24;
+      const y = Math.floor(pixel / 24);
+      let opacityStr = '';
+      if (a !== 255) {
+        const m = Math.floor((a * 1000) / 255);
+        opacityStr = ` fill-opacity="0.${m.toString().padStart(3, '0')}"`;
+      }
+      rects.push(`<rect x="${x}" y="${y}" width="${run}" height="1" fill="#${hexColor}"${opacityStr}/>`);
+    }
+    pixel += run;
+    off += 3;
+  }
+  return rects.join('');
+}
+
+// Generate Original On-Chain 24x24 Argonaut SVG (instant offline or live meta)
+function generateOriginalTokenSVG(meta) {
+  // 1. If meta has image data URI (from RPC fetch), decode and return it
+  if (meta && meta.image) {
+    if (meta.image.startsWith('data:image/svg+xml;base64,')) {
+      try {
+        const b64 = meta.image.split('data:image/svg+xml;base64,')[1];
+        return atob(b64);
+      } catch (e) {}
+    } else if (meta.image.startsWith('data:image/svg+xml;utf8,')) {
+      return decodeURIComponent(meta.image.split('data:image/svg+xml;utf8,')[1]);
+    } else if (meta.image.startsWith('<svg')) {
+      return meta.image;
+    }
+  }
+
+  // 2. Generate original 24x24 SVG instantly offline from indices and on-chain blobs
+  const indices = meta && meta.indices ? meta.indices : null;
+  if (!indices) return '';
+
+  const LAYER_BACKGROUND = 0, LAYER_BODY = 1, LAYER_HOODIE = 2, LAYER_NECK = 3, LAYER_EYES = 4, LAYER_MOUTH = 5, LAYER_HEAD = 6;
+  const paint = [LAYER_BACKGROUND, LAYER_BODY, LAYER_EYES, LAYER_HOODIE, LAYER_NECK, LAYER_MOUTH, LAYER_HEAD];
+  const traits = [
+    indices.bg_idx ?? 0,
+    indices.body_idx ?? 0,
+    indices.cloak_idx ?? 0,
+    indices.relic_idx ?? 0,
+    indices.sight_idx ?? 0,
+    indices.mouth_idx ?? 0,
+    indices.crown_idx ?? 0
+  ];
+  const isDragons = (meta.attributes || []).some(a => a.value && a.value.toLowerCase().includes('dragon'));
+  const vaped = (traits[LAYER_MOUTH] === (window.ARGONAUTS_DATA?.vapeMouthIndex ?? 2));
+  const svgBody = [];
+
+  for (const layer of paint) {
+    const idx = traits[layer];
+    let blobId = 0xFF;
+    if (layer === LAYER_MOUTH && vaped) {
+      blobId = isDragons ? (window.ARGONAUTS_DATA?.vapeDragonsBlob ?? 80) : (window.ARGONAUTS_DATA?.vapeBlueberryBlob ?? 79);
+    } else {
+      blobId = getBlobId(layer, idx);
+      if (layer === LAYER_EYES && blobId !== 0xFF && traits[LAYER_HEAD] === (window.ARGONAUTS_DATA?.headbandHeadIndex ?? 1)) {
+        const uh = (window.ARGONAUTS_DATA?.underheadBlob && window.ARGONAUTS_DATA.underheadBlob[idx]) || 0;
+        if (uh !== 0) blobId = uh;
+      }
+    }
+
+    if (layer === LAYER_EYES && vaped) {
+      const smokeBlobId = window.ARGONAUTS_DATA?.vapeSmokeBlob ?? 78;
+      if (BLOBS_MAP[smokeBlobId]) {
+        svgBody.push(renderBlobRects(BLOBS_MAP[smokeBlobId]));
+      }
+    }
+
+    if (blobId !== 0xFF && BLOBS_MAP[blobId]) {
+      svgBody.push(renderBlobRects(BLOBS_MAP[blobId]));
+    }
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges">${svgBody.join('')}</svg>`;
+}
+
 // Generate Argonaut Opepen from Token following strict contract paint order
 function synthesizeOpepen(tokenId, meta) {
   // If this token is one of the 5 canonical Smart Contract Cloak master archetypes, return the exact master SVG
@@ -593,13 +685,6 @@ ${basePaths.join('\n')}
   };
 }
 
-// Generate Original 24x24 Token SVG
-function generateOriginalTokenSVG(meta) {
-  if (meta && meta.image && meta.image.startsWith('data:image/svg+xml;base64,')) {
-    return atob(meta.image.split('data:image/svg+xml;base64,')[1]);
-  }
-  return "";
-}
 
 // Render Opepen to UI
 async function loadToken(tokenId) {
@@ -639,7 +724,11 @@ async function loadToken(tokenId) {
   const { svg, traits } = synthesizeOpepen(tokenId, meta);
   currentOpepenSVG = svg;
 
-  // Render immediately to DOM
+  // Render both Original Argonaut and Argonaut Opepen side by side immediately to DOM
+  currentOriginalSVG = generateOriginalTokenSVG(meta);
+  if (document.getElementById('orig-svg-wrapper')) {
+    document.getElementById('orig-svg-wrapper').innerHTML = currentOriginalSVG;
+  }
   document.getElementById('opepen-canvas-container').innerHTML = svg;
 
   // Update Header Badges
@@ -661,12 +750,13 @@ async function loadToken(tokenId) {
 
   showToast(`Synthesized Argonaut Opepen #${tokenId}`);
 
-  // Background fetch to load original token SVG for comparison view
+  // Background fetch to update with live contract SVG if available
   fetchTokenMetadata(tokenId).then(liveMeta => {
-    if (liveMeta) {
-      currentOriginalSVG = generateOriginalTokenSVG(liveMeta);
-      if (currentOriginalSVG && document.getElementById('orig-svg-wrapper')) {
-        document.getElementById('orig-svg-wrapper').innerHTML = currentOriginalSVG;
+    if (liveMeta && liveMeta.image) {
+      const liveSvg = generateOriginalTokenSVG(liveMeta);
+      if (liveSvg && document.getElementById('orig-svg-wrapper')) {
+        currentOriginalSVG = liveSvg;
+        document.getElementById('orig-svg-wrapper').innerHTML = liveSvg;
       }
     }
   }).catch(() => {}).finally(() => {
@@ -894,6 +984,12 @@ window.loadCurated = function(idx) {
   const { svg, traits } = synthesizeOpepen(item.id, mockMeta);
   currentOpepenSVG = svg;
 
+  // Render both Original Argonaut and Argonaut Opepen side by side immediately to DOM
+  const realMeta = getOfflineTokenTraits(item.id);
+  currentOriginalSVG = generateOriginalTokenSVG(realMeta || mockMeta);
+  if (document.getElementById('orig-svg-wrapper')) {
+    document.getElementById('orig-svg-wrapper').innerHTML = currentOriginalSVG;
+  }
   document.getElementById('opepen-canvas-container').innerHTML = svg;
   document.getElementById('opepen-badge').textContent = `OPEPEN #${item.id.toString().padStart(4, '0')}`;
   const cloakLabel = traits.cloak !== 'None' ? ` • ${traits.cloak.toUpperCase()} CLOAK` : '';
@@ -943,19 +1039,6 @@ function setupEventListeners() {
   document.getElementById('btn-random').addEventListener('click', () => {
     const randId = Math.floor(Math.random() * 9999) + 1;
     loadToken(randId);
-  });
-
-  document.getElementById('toggle-grid-btn').addEventListener('click', function() {
-    isGridVisible = !isGridVisible;
-    this.classList.toggle('active', isGridVisible);
-    document.getElementById('viewport').classList.toggle('show-grid', isGridVisible);
-    showToast(isGridVisible ? '10px Grid Enabled' : 'Grid Disabled');
-  });
-
-  document.getElementById('toggle-split-btn').addEventListener('click', function() {
-    isSplitVisible = !isSplitVisible;
-    this.classList.toggle('active', isSplitVisible);
-    document.getElementById('original-token-container').style.display = isSplitVisible ? 'block' : 'none';
   });
 
   document.getElementById('btn-download-svg').addEventListener('click', downloadSVG);

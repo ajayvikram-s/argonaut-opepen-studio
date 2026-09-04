@@ -29,16 +29,67 @@ const TRAIT_LOOKUP = {
     "Alien", "Radioactive", "Gold", "Petrified", "Floral",
     "Coral", "Silver", "Prehistoric", "Bone", "Floral"
   ],
-  Cloak: ["", "Servant", "Death", "Royalty", "Ivory", "Clergy"],
-  Relic: ["", "Gold"],
+  Cloak: ["None", "Servant", "Death", "Royalty", "Ivory", "Clergy"],
+  Relic: ["None", "Gold"],
   Sight: [
-    "", "Shades", "Glasses", "Digital", "Eye Patch", "3D Glasses", "Designer",
+    "None", "Shades", "Glasses", "Digital", "Eye Patch", "3D Glasses", "Designer",
     "Gucci", "Louis Vuitton", "Prada", "Versace", "Dior", "Balenciaga", "Chanel"
   ],
   Crown: [
-    "", "Oarsman's Band", "Bandana", "Dawn Pink Beanie", "Aegean Blue Beanie", "Purphat", "Golden Fleece", "Corsair"
+    "None", "Oarsman's Band", "Bandana", "Dawn Pink Beanie", "Aegean Blue Beanie", "Purphat", "Golden Fleece", "Corsair"
   ]
 };
+
+// Offline token traits cache for all 9,999 living Argonauts
+let TOKEN_TRAITS_BYTES = null;
+
+function getOfflineTokenTraits(tokenId) {
+  if (!window.ARGONAUTS_TRAITS_B64) return null;
+  if (!TOKEN_TRAITS_BYTES) {
+    const binaryStr = atob(window.ARGONAUTS_TRAITS_B64);
+    const len = binaryStr.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+    TOKEN_TRAITS_BYTES = bytes;
+  }
+  const idx = tokenId - 1;
+  if (idx < 0 || idx >= 9999) return null;
+  const off = idx * 7;
+  const bg_idx = TOKEN_TRAITS_BYTES[off];
+  const body_idx = TOKEN_TRAITS_BYTES[off + 1];
+  const cloak_idx = TOKEN_TRAITS_BYTES[off + 2];
+  const relic_idx = TOKEN_TRAITS_BYTES[off + 3];
+  const sight_idx = TOKEN_TRAITS_BYTES[off + 4];
+  const mouth_idx = TOKEN_TRAITS_BYTES[off + 5];
+  const crown_idx = TOKEN_TRAITS_BYTES[off + 6];
+
+  const palName = TRAIT_LOOKUP.Palette[bg_idx] || 'Void';
+  const bonesName = TRAIT_LOOKUP.Bones[body_idx] || 'Bone';
+  const cloakName = TRAIT_LOOKUP.Cloak[cloak_idx] || 'None';
+  const relicName = TRAIT_LOOKUP.Relic[relic_idx] || 'None';
+  const sightName = TRAIT_LOOKUP.Sight[sight_idx] || 'None';
+  const crownName = TRAIT_LOOKUP.Crown[crown_idx] || 'None';
+
+  let artifactName = 'None';
+  if (mouth_idx === 1) artifactName = 'Woodpipe';
+  else if (mouth_idx === 2) artifactName = 'THC Vape';
+
+  return {
+    name: `Argonaut #${tokenId.toString().padStart(4, '0')}`,
+    attributes: [
+      { trait_type: 'Palette', value: palName },
+      { trait_type: 'Bones', value: bonesName },
+      { trait_type: 'Cloak', value: cloakName },
+      { trait_type: 'Relic', value: relicName },
+      { trait_type: 'Sight', value: sightName },
+      { trait_type: 'Artifact', value: artifactName },
+      { trait_type: 'Crown', value: crownName }
+    ],
+    indices: { bg_idx, body_idx, cloak_idx, relic_idx, sight_idx, mouth_idx, crown_idx }
+  };
+}
 
 // Canonical Tapered Silhouette Cells
 const CANON_BODY_TARGET = [];
@@ -171,12 +222,12 @@ function seededRandom(seed) {
   };
 }
 
-// RPC Token Metadata Fetcher
+// RPC Token Metadata Fetcher (optional online enhancement)
 async function fetchTokenMetadata(tokenId) {
   const rpcs = [
-    'https://ethereum.publicnode.com',
     'https://1rpc.io/eth',
-    'https://rpc.mevblocker.io'
+    'https://rpc.mevblocker.io',
+    'https://ethereum.publicnode.com'
   ];
   const mainContract = '0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C';
   const tokenHex = tokenId.toString(16).padStart(64, '0');
@@ -186,7 +237,7 @@ async function fetchTokenMetadata(tokenId) {
     try {
       const resp = await fetch(rpc, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'User-Agent': 'ArgonautOpepen/1.0' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jsonrpc: '2.0',
           id: 1,
@@ -237,18 +288,18 @@ function synthesizeOpepen(tokenId, meta) {
   // Layer 6: Crown
   const bgName = attrMap['Palette'] || 'Void';
   const bonesName = attrMap['Bones'] || 'Bone';
-  const cloakName = attrMap['Cloak'] || '';
-  const relicName = attrMap['Relic'] || '';
-  const sightName = attrMap['Sight'] || '';
-  const artifactName = attrMap['Artifact'] || '';
-  const crownName = attrMap['Crown'] || '';
+  const cloakName = attrMap['Cloak'] || 'None';
+  const relicName = attrMap['Relic'] || 'None';
+  const sightName = attrMap['Sight'] || 'None';
+  const artifactName = attrMap['Artifact'] || 'None';
+  const crownName = attrMap['Crown'] || 'None';
 
-  const bgIdx = getTraitIndex('Palette', bgName);
-  const bonesIdx = getTraitIndex('Bones', bonesName);
-  const cloakIdx = getTraitIndex('Cloak', cloakName);
-  const relicIdx = getTraitIndex('Relic', relicName);
-  const sightIdx = getTraitIndex('Sight', sightName);
-  const crownIdx = getTraitIndex('Crown', crownName);
+  const bgIdx = meta && meta.indices ? meta.indices.bg_idx : getTraitIndex('Palette', bgName);
+  const bonesIdx = meta && meta.indices ? meta.indices.body_idx : getTraitIndex('Bones', bonesName);
+  const cloakIdx = meta && meta.indices ? meta.indices.cloak_idx : getTraitIndex('Cloak', cloakName);
+  const relicIdx = meta && meta.indices ? meta.indices.relic_idx : getTraitIndex('Relic', relicName);
+  const sightIdx = meta && meta.indices ? meta.indices.sight_idx : getTraitIndex('Sight', sightName);
+  const crownIdx = meta && meta.indices ? meta.indices.crown_idx : getTraitIndex('Crown', crownName);
 
   // Decode layer blobs
   const bgDecoded = decodeBlob(getBlobId(0, bgIdx));
@@ -277,7 +328,7 @@ function synthesizeOpepen(tokenId, meta) {
     if (py >= 5 && py <= 18) compositeHead[k] = boneDecoded.pixels[k];
   });
 
-  // Layer 5 Smoke: Vapor Smoke (rendered before eyes so it drifts behind frame)
+  // Layer 5 Smoke: Vapor Smoke
   Object.keys(artifactSmokePx).forEach(k => {
     compositeHead[k] = artifactSmokePx[k];
   });
@@ -300,7 +351,7 @@ function synthesizeOpepen(tokenId, meta) {
     if (py >= 5 && py <= 18) compositeHead[k] = relicDecoded.pixels[k];
   });
 
-  // Layer 5 Device: Artifact / Mouth Device (Woodpipe / Vape device)
+  // Layer 5 Device: Artifact / Mouth Device
   Object.keys(artifactDevicePx).forEach(k => {
     compositeHead[k] = artifactDevicePx[k];
   });
@@ -311,8 +362,12 @@ function synthesizeOpepen(tokenId, meta) {
     if (py >= 5 && py <= 18) compositeHead[k] = crownDecoded.pixels[k];
   });
 
-  // Build Right Head
+  // Build Right Head (with full collar drape when cloak is present)
   const headRightCells = {};
+  const maxGy = cloakIdx > 0 ? 32 : 27;
+  const minGx = cloakIdx > 0 ? 14 : 28;
+  const minGy = cloakIdx > 0 ? 9 : 14;
+
   Object.keys(compositeHead).forEach(k => {
     const [pt_x, pt_y] = k.split(',').map(Number);
     const gx_R = pt_x + 22;
@@ -323,45 +378,120 @@ function synthesizeOpepen(tokenId, meta) {
         headRightCells[`${gx_R},${gy_R}`] = compositeHead[k];
       }
     } else {
-      if (gx_R >= 28 && gx_R <= 41 && gy_R >= 14 && gy_R <= 27) {
+      if (gx_R >= minGx && gx_R <= 41 && gy_R >= minGy && gy_R <= maxGy) {
         headRightCells[`${gx_R},${gy_R}`] = compositeHead[k];
       }
     }
   });
 
-  // Build Left Head (Anti-diagonal reflection)
+  // Build Left Head (Anti-diagonal reflection: strictly cropped to canonical silhouette gx >= 14)
   const headLeftCells = {};
   Object.keys(headRightCells).forEach(k => {
     const [gx_R, gy_R] = k.split(',').map(Number);
     const gx_L = 41 - gy_R;
     const gy_L = 55 - gx_R;
-    if (gx_L >= 0 && gx_L < 56 && gy_L >= 0 && gy_L < 56) {
+    if (gx_L >= 14 && gx_L <= 41 && gy_L >= 14 && gy_L <= 55) {
       headLeftCells[`${gx_L},${gy_L}`] = headRightCells[k];
     }
   });
 
-  // Convert cells to paths
-  const headRightPaths = [];
-  Object.keys(headRightCells).forEach(k => {
+  // Clean merge to ensure ZERO duplicate path overlaps
+  const headCombined = Object.assign({}, headLeftCells, headRightCells);
+
+  const headPaths = [];
+  Object.keys(headCombined).forEach(k => {
     const [gx, gy] = k.split(',').map(Number);
-    const { color, alpha } = headRightCells[k];
+    const { color, alpha } = headCombined[k];
     const x = gx * 10;
     const y = gy * 10;
     const opStr = alpha < 255 ? ` fill-opacity="${(alpha / 255).toFixed(3)}"` : '';
-    headRightPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${color}"${opStr}/>`);
+    headPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${color}"${opStr}/>`);
   });
 
-  const headLeftPaths = [];
-  Object.keys(headLeftCells).forEach(k => {
-    const [gx, gy] = k.split(',').map(Number);
-    const { color, alpha } = headLeftCells[k];
-    const x = gx * 10;
-    const y = gy * 10;
-    const opStr = alpha < 255 ? ` fill-opacity="${(alpha / 255).toFixed(3)}"` : '';
-    headLeftPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${color}"${opStr}/>`);
-  });
+  // Volumetric Clean-Cloth Drapery Palettes with Option 3 Dual-Wing Sweep Accents
+  const CLOAK_PALETTES = {
+    1: { name: "Servant", SPEC_HI: "#FFFFFF", SOFT_HI: "#E6E6E6", ROSE_HI: "#DDDDDD", MID_TONE: "#D6D3D1", BERRY_MID: "#C8C4C0", ROSE_MID: "#B8B4B0", DEEP_ROSE: "#A9A9A9", PLUM_SHD: "#979797" },
+    2: { name: "Death", SPEC_HI: "#2E2F38", SOFT_HI: "#24252C", ROSE_HI: "#1E1F24", MID_TONE: "#1A1B20", BERRY_MID: "#17171B", ROSE_MID: "#131316", DEEP_ROSE: "#0D0D10", PLUM_SHD: "#09090B" },
+    3: { name: "Royalty", SPEC_HI: "#5A3686", SOFT_HI: "#4A2C6E", ROSE_HI: "#432864", MID_TONE: "#3C2358", BERRY_MID: "#351E4E", ROSE_MID: "#2D1842", DEEP_ROSE: "#29173C", PLUM_SHD: "#241334" },
+    4: { name: "Ivory", SPEC_HI: "#FFF9EB", SOFT_HI: "#E8E2D2", ROSE_HI: "#DDD7C7", MID_TONE: "#D1CBBB", BERRY_MID: "#C4BEAE", ROSE_MID: "#B8B2A2", DEEP_ROSE: "#B2AC9D", PLUM_SHD: "#A39D8E" },
+    5: { name: "Clergy", SPEC_HI: "#A7344E", SOFT_HI: "#992F47", ROSE_HI: "#9D3049", MID_TONE: "#8C2A40", BERRY_MID: "#8F2B42", ROSE_MID: "#88283E", DEEP_ROSE: "#7E2439", PLUM_SHD: "#691C2E" }
+  };
 
-  // Body & Base Organic Sampling from on-chain bone palette
+  function getVolumetricClothColor(gx, gy, cIdx) {
+    const pal = CLOAK_PALETTES[cIdx] || CLOAK_PALETTES[5];
+
+    // Option 3: Dual-Wing Drapery Sweep Accents
+    if ((gy === 29 || gy === 30) && (gx === 17 || gx === 18)) return pal.SOFT_HI;
+    if ((gy === 32 || gy === 33) && (gx === 18 || gx === 19)) return pal.SOFT_HI;
+    if ((gy === 34 || gy === 35) && (gx === 19 || gx === 20)) return pal.SOFT_HI;
+    if ((gy === 32 || gy === 33) && (gx === 27 || gx === 28)) return pal.ROSE_MID;
+    if ((gy === 34 || gy === 35) && (gx === 26 || gx === 27)) return pal.ROSE_MID;
+
+    const dist = Math.abs(gx - 13.5);
+    if (gy >= 28 && gy <= 41) {
+      if (gy <= 30) {
+        if (dist > 9.5) return pal.PLUM_SHD;
+        if (dist > 7.0) return pal.SPEC_HI;
+        if (dist > 4.5) return pal.SOFT_HI;
+        if (dist > 1.5) return pal.MID_TONE;
+        return pal.ROSE_MID;
+      } else if (gy <= 33) {
+        if (dist > 11.5) return pal.PLUM_SHD;
+        if (dist > 9.5) return pal.DEEP_ROSE;
+        if (dist > 8.0) return pal.ROSE_MID;
+        if (dist > 5.5) return pal.SOFT_HI;
+        if (dist > 2.0) return pal.MID_TONE;
+        return pal.BERRY_MID;
+      } else if (gy <= 38) {
+        if (dist > 11.5) return pal.PLUM_SHD;
+        if (dist > 9.0) return pal.DEEP_ROSE;
+        if (dist > 7.5) return pal.ROSE_MID;
+        if (dist > 4.5) {
+          if ((gy === 36 || gy === 37) && dist >= 5.5 && dist <= 7.0) return pal.SOFT_HI;
+          return pal.MID_TONE;
+        }
+        if (dist > 1.5) return pal.MID_TONE;
+        return pal.BERRY_MID;
+      } else if (gy === 39) {
+        if (dist > 10.5) return pal.DEEP_ROSE;
+        if (dist > 8.5) return pal.ROSE_MID;
+        if (dist > 1.5) return pal.MID_TONE;
+        return pal.BERRY_MID;
+      } else if (gy === 40) {
+        if (dist > 9.5) return pal.PLUM_SHD;
+        if (dist > 7.5) return pal.DEEP_ROSE;
+        if (dist > 5.5) return pal.ROSE_MID;
+        return pal.MID_TONE;
+      } else if (gy === 41) {
+        if (dist > 6.0) return pal.PLUM_SHD;
+        if (dist > 3.0) return pal.DEEP_ROSE;
+        return pal.ROSE_MID;
+      }
+    } else if (gy >= 49 && gy <= 55) {
+      if (gy === 49) {
+        if (dist > 7.5) return pal.DEEP_ROSE;
+        if (dist > 5.0) return pal.SOFT_HI;
+        if (dist > 1.5) return pal.MID_TONE;
+        return pal.SOFT_HI;
+      } else if (gy === 50) {
+        if (dist > 9.0) return pal.DEEP_ROSE;
+        if (dist > 6.5) return pal.SOFT_HI;
+        return pal.MID_TONE;
+      } else if (gy <= 54) {
+        if (dist > 11.0) return pal.PLUM_SHD;
+        if (dist > 9.0) return pal.DEEP_ROSE;
+        if (dist > 7.0) return pal.ROSE_MID;
+        return pal.MID_TONE;
+      } else if (gy === 55) {
+        if (dist > 8.0) return pal.PLUM_SHD;
+        if (dist > 4.0) return pal.DEEP_ROSE;
+        return pal.ROSE_MID;
+      }
+    }
+    return pal.MID_TONE;
+  }
+
+  // Body & Base Organic Sampling from on-chain bone palette (or Volumetric Cloth when Cloak present)
   const bonePalette = boneDecoded.palette.length ? boneDecoded.palette : ["#DCD4D0", "#BDB9B8", "#8D8B8A", "#6A6866"];
   const rng = seededRandom(tokenId * 31337 + 42);
 
@@ -376,28 +506,28 @@ function synthesizeOpepen(tokenId, meta) {
   }
 
   const bodyPaths = [];
-  CANON_BODY_TARGET.forEach(([gx, gy], i) => {
-    if (headRightCells[`${gx},${gy}`] || headLeftCells[`${gx},${gy}`]) return;
-    const c = shuffledPalette[i];
+  let cIdx = 0;
+  CANON_BODY_TARGET.forEach(([gx, gy]) => {
+    if (headCombined[`${gx},${gy}`]) return; // Avoid duplicate overlapping pixels
+    const c = cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++];
     const x = gx * 10;
     const y = gy * 10;
     bodyPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${c}"/>`);
   });
 
   const basePaths = [];
-  CANON_BASE_TARGET.forEach(([gx, gy], j) => {
-    if (headRightCells[`${gx},${gy}`] || headLeftCells[`${gx},${gy}`]) return;
-    const c = shuffledPalette[CANON_BODY_TARGET.length + j];
+  CANON_BASE_TARGET.forEach(([gx, gy]) => {
+    if (headCombined[`${gx},${gy}`]) return; // Avoid duplicate overlapping pixels
+    const c = cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++];
     const x = gx * 10;
-    y = gy * 10;
+    const y = gy * 10;
     basePaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${c}"/>`);
   });
 
-  // Assemble full 560x560 SVG
+  // Assemble full 560x560 SVG with zero overlaps
   const svg = `<svg width="560" height="560" viewBox="0 0 560 560" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M560 0H0V560H560V0Z" fill="${bgColor}"/>
-${headLeftPaths.join('\n')}
-${headRightPaths.join('\n')}
+${headPaths.join('\n')}
 ${bodyPaths.join('\n')}
 ${basePaths.join('\n')}
 </svg>`;
@@ -444,54 +574,58 @@ async function loadToken(tokenId) {
     }
   });
 
-  try {
-    let meta = await fetchTokenMetadata(tokenId);
-    if (!meta) {
-      meta = {
-        name: `Argonaut #${tokenId.toString().padStart(4, '0')}`,
-        attributes: [
-          { trait_type: 'Palette', value: 'Violet' },
-          { trait_type: 'Bones', value: 'Bone' },
-          { trait_type: 'Sight', value: '3D Glasses' },
-          { trait_type: 'Crown', value: 'Aegean Blue Beanie' }
-        ]
-      };
-    }
-    currentMetadata = meta;
-
-    const { svg, traits } = synthesizeOpepen(tokenId, meta);
-    currentOpepenSVG = svg;
-    currentOriginalSVG = generateOriginalTokenSVG(meta);
-
-    // Update DOM Canvas
-    document.getElementById('opepen-canvas-container').innerHTML = svg;
-    if (currentOriginalSVG) {
-      document.getElementById('orig-svg-wrapper').innerHTML = currentOriginalSVG;
-    }
-
-    // Update Header Badges
-    document.getElementById('opepen-badge').textContent = `OPEPEN #${tokenId.toString().padStart(4, '0')}`;
-    const artLabel = traits.artifact !== 'None' ? ` • ${traits.artifact.toUpperCase()}` : '';
-    document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE${artLabel}`;
-
-    // Update Inspector Traits in Canonical Contract Layer Order (0..6):
-    document.getElementById('meta-palette').textContent = `${traits.palette} (${traits.paletteHex})`;
-    document.getElementById('meta-bones').textContent = traits.bones;
-    document.getElementById('meta-cloak').textContent = traits.cloak;
-    document.getElementById('meta-relic').textContent = traits.relic;
-    document.getElementById('meta-sight').textContent = traits.sight;
-    if (document.getElementById('meta-artifact')) {
-      document.getElementById('meta-artifact').textContent = traits.artifact;
-    }
-    document.getElementById('meta-crown').textContent = traits.crown;
-
-    showToast(`Synthesized Argonaut Opepen #${tokenId}`);
-  } catch (err) {
-    console.error(err);
-    showToast(`Error synthesizing Token #${tokenId}`);
-  } finally {
-    btnSpinner.style.display = 'none';
+  // 1. Instantly retrieve 100% verified on-chain traits from offline table
+  let meta = getOfflineTokenTraits(tokenId);
+  if (!meta) {
+    meta = {
+      name: `Argonaut #${tokenId.toString().padStart(4, '0')}`,
+      attributes: [
+        { trait_type: 'Palette', value: 'Violet' },
+        { trait_type: 'Bones', value: 'Bone' },
+        { trait_type: 'Cloak', value: 'None' },
+        { trait_type: 'Sight', value: '3D Glasses' },
+        { trait_type: 'Crown', value: 'Aegean Blue Beanie' }
+      ]
+    };
   }
+  currentMetadata = meta;
+
+  const { svg, traits } = synthesizeOpepen(tokenId, meta);
+  currentOpepenSVG = svg;
+
+  // Render immediately to DOM
+  document.getElementById('opepen-canvas-container').innerHTML = svg;
+
+  // Update Header Badges
+  document.getElementById('opepen-badge').textContent = `OPEPEN #${tokenId.toString().padStart(4, '0')}`;
+  const cloakLabel = traits.cloak !== 'None' ? ` • ${traits.cloak.toUpperCase()} CLOAK` : '';
+  const artLabel = traits.artifact !== 'None' ? ` • ${traits.artifact.toUpperCase()}` : '';
+  document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE${cloakLabel}${artLabel}`;
+
+  // Update Inspector Traits in Canonical Contract Layer Order (0..6):
+  document.getElementById('meta-palette').textContent = `${traits.palette} (${traits.paletteHex})`;
+  document.getElementById('meta-bones').textContent = traits.bones;
+  document.getElementById('meta-cloak').textContent = traits.cloak;
+  document.getElementById('meta-relic').textContent = traits.relic;
+  document.getElementById('meta-sight').textContent = traits.sight;
+  if (document.getElementById('meta-artifact')) {
+    document.getElementById('meta-artifact').textContent = traits.artifact;
+  }
+  document.getElementById('meta-crown').textContent = traits.crown;
+
+  showToast(`Synthesized Argonaut Opepen #${tokenId}`);
+
+  // Background fetch to load original token SVG for comparison view
+  fetchTokenMetadata(tokenId).then(liveMeta => {
+    if (liveMeta) {
+      currentOriginalSVG = generateOriginalTokenSVG(liveMeta);
+      if (currentOriginalSVG && document.getElementById('orig-svg-wrapper')) {
+        document.getElementById('orig-svg-wrapper').innerHTML = currentOriginalSVG;
+      }
+    }
+  }).catch(() => {}).finally(() => {
+    btnSpinner.style.display = 'none';
+  });
 }
 
 // Toast notification helper
@@ -572,6 +706,93 @@ function exportJSON() {
   showToast('Exported Metadata JSON');
 }
 
+// 5 Smart Contract Cloaks Master Suite (Option 3 Dual-Wing Sweep locked)
+const SMART_CONTRACT_CLOAKS = [
+  {
+    id: 125,
+    name: "Servant Argonaut Opepen",
+    cloak: "Servant",
+    cloakIdx: 1,
+    material: "Silver Grey Velvet",
+    drape: "Option 3 Dual-Wing Sweep (#E6E6E6 cascade, #B8B4B0 flanks)",
+    traits: { Palette: "Ancient", Bones: "Bone", Cloak: "Servant" }
+  },
+  {
+    id: 28,
+    name: "Death Argonaut Opepen",
+    cloak: "Death",
+    cloakIdx: 2,
+    material: "Obsidian Black Velvet",
+    drape: "Option 3 Dual-Wing Sweep (#24252C cascade, #131316 flanks)",
+    traits: { Palette: "Void", Bones: "Bone", Cloak: "Death" }
+  },
+  {
+    id: 107,
+    name: "Royalty Argonaut Opepen",
+    cloak: "Royalty",
+    cloakIdx: 3,
+    material: "Imperial Purple Velvet",
+    drape: "Option 3 Dual-Wing Sweep (#4A2C6E cascade, #2D1842 flanks)",
+    traits: { Palette: "Ancient", Bones: "Bone", Cloak: "Royalty" }
+  },
+  {
+    id: 18,
+    name: "Ivory Argonaut Opepen",
+    cloak: "Ivory",
+    cloakIdx: 4,
+    material: "Antique Ivory Silk",
+    drape: "Option 3 Dual-Wing Sweep (#E8E2D2 cascade, #B8B2A2 flanks)",
+    traits: { Palette: "Blush", Bones: "Bone", Cloak: "Ivory", Sight: "Shades" }
+  },
+  {
+    id: 20,
+    name: "Clergy Argonaut Opepen",
+    cloak: "Clergy",
+    cloakIdx: 5,
+    material: "Crimson Wine Velvet",
+    drape: "Option 3 Dual-Wing Sweep (#992F47 cascade, #88283E flanks)",
+    traits: { Palette: "Punkblue", Bones: "Bone", Cloak: "Clergy", Relic: "Gold", Sight: "Eye Patch" }
+  }
+];
+
+function populateCloaksShowcase() {
+  const container = document.getElementById('cloaks-grid');
+  if (!container) return;
+
+  container.innerHTML = SMART_CONTRACT_CLOAKS.map(item => {
+    const mockMeta = {
+      name: item.name,
+      attributes: Object.entries(item.traits).map(([k, v]) => ({ trait_type: k, value: v }))
+    };
+    const { svg } = synthesizeOpepen(item.id, mockMeta);
+    return `
+      <div class="cloak-card" data-id="${item.id}" onclick="loadCloak(${item.id})">
+        <div class="cloak-card-badge">CLOAK ARCHETYPE</div>
+        <div class="cloak-thumb">${svg}</div>
+        <div class="cloak-info">
+          <div class="cloak-header">
+            <span class="cloak-name">${item.cloak}</span>
+            <span class="cloak-token-tag">#${item.id}</span>
+          </div>
+          <span class="cloak-material">${item.material}</span>
+          <span class="cloak-drape-note">${item.drape}</span>
+          <button class="cloak-load-btn" onclick="event.stopPropagation(); loadCloak(${item.id});">
+            <span>SYNTHESIZE ARCHETYPE</span> →
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.loadCloak = function(tokenId) {
+  loadToken(tokenId);
+  const stage = document.querySelector('.stage-section');
+  if (stage) {
+    stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
 // 20 Curated Editions Catalog
 const CURATED_EDITIONS = [
   { id: 1, name: "Cyber Alien Opepen", bone: "Alien", pal: "Void", traits: { Palette: "Void", Bones: "Alien", Sight: "3D Glasses" } },
@@ -634,8 +855,9 @@ window.loadCurated = function(idx) {
 
   document.getElementById('opepen-canvas-container').innerHTML = svg;
   document.getElementById('opepen-badge').textContent = `OPEPEN #${item.id.toString().padStart(4, '0')}`;
+  const cloakLabel = traits.cloak !== 'None' ? ` • ${traits.cloak.toUpperCase()} CLOAK` : '';
   const artLabel = traits.artifact !== 'None' ? ` • ${traits.artifact.toUpperCase()}` : '';
-  document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE${artLabel}`;
+  document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE${cloakLabel}${artLabel}`;
 
   document.getElementById('meta-palette').textContent = `${traits.palette} (${traits.paletteHex})`;
   document.getElementById('meta-bones').textContent = traits.bones;
@@ -706,6 +928,7 @@ function setupEventListeners() {
 window.addEventListener('DOMContentLoaded', () => {
   initEngine();
   setupEventListeners();
+  populateCloaksShowcase();
   populateGallery();
-  loadToken(1); // Default to Token #1
+  loadToken(20); // Default to Token #20 (Clergy Cloak) so user immediately sees locked cloak design!
 });

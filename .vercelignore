@@ -1,0 +1,12 @@
+*.py
+*.sol
+*.json
+!vercel.json
+contracts_argonauts/
+contracts_renderer/
+custom_opepens/
+generated_output/
+argonaut_opepens/
+argonaut_opepens_jpg/
+*.svg
+.git

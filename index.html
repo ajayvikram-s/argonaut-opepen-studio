@@ -5,10 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARGONAUT × OPEPEN — On-Chain Identity Synthesizer</title>
   <meta name="description" content="Generate dual-head symmetrical Opepen artworks from any Argonauts NFT token ID directly from the Ethereum smart contract. Minimalist, pixel-perfect, on-chain.">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260905_cloak_v3">
 </head>
 <body>
   <!-- Ambient background glow -->
@@ -26,6 +29,10 @@
       </div>
 
       <div class="nav-links">
+        <a href="#cloaks-showcase" class="nav-chip highlight-chip">
+          <span class="chip-dot glow"></span>
+          <span>✦ CONTRACT CLOAKS</span>
+        </a>
         <a href="https://etherscan.io/address/0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C" target="_blank" class="nav-chip" title="Argonauts Core Contract">
           <span class="chip-dot"></span>
           <span>0x387C...392C</span>
@@ -49,7 +56,7 @@
               placeholder="0001" 
               min="1" 
               max="9999" 
-              value="1" 
+              value="20" 
               autocomplete="off"
               spellcheck="false"
             />
@@ -59,19 +66,22 @@
             </button>
           </div>
 
-          <!-- Quick presets -->
+          <!-- Quick presets with Smart Contract Cloaks -->
           <div class="quick-presets">
+            <span class="presets-label">CONTRACT CLOAKS:</span>
+            <button class="preset-pill cloak-pill" data-id="125">#125 (Servant)</button>
+            <button class="preset-pill cloak-pill" data-id="28">#28 (Death)</button>
+            <button class="preset-pill cloak-pill" data-id="107">#107 (Royalty)</button>
+            <button class="preset-pill cloak-pill" data-id="18">#18 (Ivory)</button>
+            <button class="preset-pill cloak-pill active" data-id="20">#20 (Clergy)</button>
+            <span class="presets-divider">|</span>
             <span class="presets-label">CURATED TOKENS:</span>
-            <button class="preset-pill active" data-id="1">#1 (Bone / 3D)</button>
+            <button class="preset-pill" data-id="1">#1 (Bone / 3D)</button>
             <button class="preset-pill" data-id="2">#2 (LV Bone / Vape)</button>
             <button class="preset-pill" data-id="3">#3 (Woodpipe)</button>
             <button class="preset-pill" data-id="5">#5 (Woodpipe)</button>
             <button class="preset-pill" data-id="42">#42 (Prehistoric / Vape)</button>
-            <button class="preset-pill" data-id="777">#777 (Offwhite)</button>
-            <button class="preset-pill" data-id="1458">#1458 (Vape Kush / Royalty)</button>
-            <button class="preset-pill" data-id="1337">#1337</button>
-            <button class="preset-pill" data-id="6969">#6969</button>
-            <button class="preset-pill" data-id="9999">#9999</button>
+            <button class="preset-pill" data-id="1458">#1458 (Royalty Cloak)</button>
             <button id="btn-random" class="preset-pill random-pill">🎲 RANDOM TOKEN</button>
           </div>
         </div>
@@ -204,6 +214,25 @@
         </div>
       </section>
 
+      <!-- Smart Contract Cloaks Master Suite Section -->
+      <section class="cloaks-section" id="cloaks-showcase">
+        <div class="section-heading">
+          <div>
+            <div class="section-badge-row">
+              <span class="badge-tag">LOCKED CANONICAL DESIGN</span>
+              <span class="badge-tag live-tag">100% ETHEREUM VERIFIED</span>
+            </div>
+            <h2>SMART CONTRACT CLOAK ARCHETYPES</h2>
+            <p>The 5 authentic Ethereum smart contract cloaks with locked Option 3 Dual-Wing Sweep drapery and full collar connection.</p>
+          </div>
+          <span class="gallery-counter">5 CLOAKS</span>
+        </div>
+
+        <div id="cloaks-grid" class="cloaks-grid">
+          <!-- Populated dynamically via app.js -->
+        </div>
+      </section>
+
       <!-- Curated Collection Gallery Section -->
       <section class="gallery-section">
         <div class="section-heading">
@@ -237,7 +266,7 @@
   <div id="toast" class="toast"></div>
 
   <!-- Engine Data and Application Scripts -->
-  <script src="engine_data.js"></script>
-  <script src="app.js"></script>
+  <script src="engine_data.js?v=20260905_cloak_v3"></script>
+  <script src="app.js?v=20260905_cloak_v3"></script>
 </body>
 </html>

@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260905_dualside_v4">
+  <link rel="stylesheet" href="styles.css?v=20260905_dualside_v5">
 </head>
 <body>
   <div class="app-container">
@@ -40,23 +40,10 @@
           </div>
         </div>
 
-        <!-- Canvas Viewport (Side-by-Side Dual Stage: Original Argonaut & Argonaut Opepen) -->
+        <!-- Canvas Viewport (Side-by-Side Artworks: No text, no extra decoration) -->
         <div class="canvas-frame" id="viewport">
-          <div class="preview-item">
-            <div class="preview-header">
-              <span class="preview-tag">ORIGINAL ARGONAUT</span>
-              <span class="preview-dim">24 × 24</span>
-            </div>
-            <div id="orig-svg-wrapper" class="svg-stage"></div>
-          </div>
-          <div class="preview-divider"></div>
-          <div class="preview-item">
-            <div class="preview-header">
-              <span class="preview-tag">ARGONAUT OPEPEN</span>
-              <span class="preview-dim">560 × 560</span>
-            </div>
-            <div id="opepen-canvas-container" class="svg-stage"></div>
-          </div>
+          <div id="orig-svg-wrapper" class="svg-stage"></div>
+          <div id="opepen-canvas-container" class="svg-stage"></div>
         </div>
 
         <!-- Unified Actions & Token Controls Bar -->

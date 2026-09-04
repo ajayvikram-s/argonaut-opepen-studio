@@ -278,12 +278,25 @@ function synthesizeOpepen(tokenId, meta) {
     const bgMatch = rawSvg.match(/fill="([^"]+)"/);
     const bgColor = bgMatch ? bgMatch[1] : "#141414";
     const resolvedMeta = meta || getOfflineTokenTraits(tidNum) || { name: `Argonaut #${tidNum}`, attributes: [] };
-    const palAttr = resolvedMeta.attributes ? resolvedMeta.attributes.find(a => a.trait_type === 'Palette') : null;
+    const aMap = {};
+    if (resolvedMeta.attributes) {
+      resolvedMeta.attributes.forEach(a => { aMap[a.trait_type] = a.value; });
+    }
     return {
       svg: rawSvg,
       metadata: resolvedMeta,
       bgColor: bgColor,
-      paletteName: palAttr ? palAttr.value : 'Custom'
+      paletteName: aMap['Palette'] || 'Custom',
+      traits: {
+        palette: aMap['Palette'] || 'Void',
+        paletteHex: bgColor,
+        bones: aMap['Bones'] || 'Bone',
+        cloak: aMap['Cloak'] || 'None',
+        relic: aMap['Relic'] || 'None',
+        sight: aMap['Sight'] || 'None',
+        artifact: aMap['Artifact'] || 'None',
+        crown: aMap['Crown'] || 'None'
+      }
     };
   }
 

@@ -3,270 +3,232 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARGONAUT × OPEPEN — On-Chain Identity Synthesizer</title>
-  <meta name="description" content="Generate dual-head symmetrical Opepen artworks from any Argonauts NFT token ID directly from the Ethereum smart contract. Minimalist, pixel-perfect, on-chain.">
+  <title>ARGONAUT × OPEPEN — On-Chain Synthesizer</title>
+  <meta name="description" content="Dual-head symmetrical Opepen generator for Argonauts NFTs directly from Ethereum smart contracts.">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260905_cloak_master">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=20260905_minimal_v1">
 </head>
 <body>
-  <!-- Ambient background glow -->
-  <div class="bg-noise"></div>
-
-  <div class="app-layout">
-    <!-- Top Minimalist Navigation -->
-    <header class="top-nav">
+  <div class="app-container">
+    <!-- Minimalist Header -->
+    <header class="header">
       <div class="brand">
-        <span class="brand-symbol">◈</span>
-        <div class="brand-text">
-          <span class="brand-title">ARGONAUT × OPEPEN</span>
-          <span class="brand-sub">ON-CHAIN IDENTITY SYNTHESIZER</span>
-        </div>
+        <span class="brand-glyph">◈</span>
+        <span class="brand-name">ARGONAUT × OPEPEN</span>
       </div>
 
-      <div class="nav-links">
-        <a href="#cloaks-showcase" class="nav-chip highlight-chip">
-          <span class="chip-dot glow"></span>
-          <span>✦ CONTRACT CLOAKS</span>
-        </a>
-        <a href="https://etherscan.io/address/0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C" target="_blank" class="nav-chip" title="Argonauts Core Contract">
-          <span class="chip-dot"></span>
-          <span>0x387C...392C</span>
-        </a>
-        <a href="https://opensea.io/collection/the-argonauts" target="_blank" class="nav-chip">
-          <span>OPENSEA</span>
-        </a>
-      </div>
+      <nav class="nav">
+        <a href="#cloaks-showcase" class="nav-link">CLOAKS</a>
+        <a href="https://etherscan.io/address/0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C" target="_blank" class="nav-link" title="Contract">0x387C...392C</a>
+        <a href="https://opensea.io/collection/the-argonauts" target="_blank" class="nav-link">OPENSEA</a>
+      </nav>
     </header>
 
-    <!-- Main Generator Hero & Input -->
-    <main class="main-content">
-      <!-- Search & Input Section -->
-      <section class="search-section">
-        <div class="search-container">
-          <div class="input-wrapper">
-            <span class="input-prefix">TOKEN #</span>
-            <input 
-              type="number" 
-              id="token-id-input" 
-              placeholder="0001" 
-              min="1" 
-              max="9999" 
-              value="20" 
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <button id="btn-generate" class="btn btn-primary">
-              <span class="btn-text">SYNTHESIZE OPEPEN</span>
-              <span class="btn-spinner" style="display:none;">⏳</span>
-            </button>
+    <!-- Synthesis Control Bar -->
+    <section class="control-bar">
+      <div class="input-group">
+        <label for="token-id-input" class="input-label">TOKEN</label>
+        <input 
+          type="number" 
+          id="token-id-input" 
+          placeholder="0001" 
+          min="1" 
+          max="9999" 
+          value="20" 
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="btn-generate" class="btn-synthesize">
+          <span class="btn-text">SYNTHESIZE</span>
+          <span class="btn-spinner" style="display:none;">…</span>
+        </button>
+      </div>
+
+      <!-- Compact Presets Strip -->
+      <div class="presets-strip">
+        <div class="preset-group">
+          <span class="preset-label">CLOAKS</span>
+          <button class="preset-pill cloak-pill active" data-id="20">#20 Clergy</button>
+          <button class="preset-pill cloak-pill" data-id="125">#125 Servant</button>
+          <button class="preset-pill cloak-pill" data-id="28">#28 Death</button>
+          <button class="preset-pill cloak-pill" data-id="107">#107 Royalty</button>
+          <button class="preset-pill cloak-pill" data-id="18">#18 Ivory</button>
+        </div>
+        <div class="preset-divider"></div>
+        <div class="preset-group">
+          <span class="preset-label">CURATED</span>
+          <button class="preset-pill" data-id="1">#1</button>
+          <button class="preset-pill" data-id="2">#2</button>
+          <button class="preset-pill" data-id="3">#3</button>
+          <button class="preset-pill" data-id="5">#5</button>
+          <button class="preset-pill" data-id="42">#42</button>
+          <button class="preset-pill" data-id="1458">#1458</button>
+          <button id="btn-random" class="preset-pill random-pill">RANDOM</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Workspace Stage -->
+    <main class="stage-container">
+      <!-- Artwork Canvas Panel -->
+      <div class="canvas-panel">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span id="opepen-badge" class="badge-token">ARGONAUT #0020</span>
+            <span class="badge-sep">/</span>
+            <span id="trait-summary-badge" class="badge-trait">PUNKBLUE • CLERGY</span>
           </div>
-
-          <!-- Quick presets with Smart Contract Cloaks -->
-          <div class="quick-presets">
-            <span class="presets-label">CONTRACT CLOAKS:</span>
-            <button class="preset-pill cloak-pill" data-id="125">#125 (Servant)</button>
-            <button class="preset-pill cloak-pill" data-id="28">#28 (Death)</button>
-            <button class="preset-pill cloak-pill" data-id="107">#107 (Royalty)</button>
-            <button class="preset-pill cloak-pill" data-id="18">#18 (Ivory)</button>
-            <button class="preset-pill cloak-pill active" data-id="20">#20 (Clergy)</button>
-            <span class="presets-divider">|</span>
-            <span class="presets-label">CURATED TOKENS:</span>
-            <button class="preset-pill" data-id="1">#1 (Bone / 3D)</button>
-            <button class="preset-pill" data-id="2">#2 (LV Bone / Vape)</button>
-            <button class="preset-pill" data-id="3">#3 (Woodpipe)</button>
-            <button class="preset-pill" data-id="5">#5 (Woodpipe)</button>
-            <button class="preset-pill" data-id="42">#42 (Prehistoric / Vape)</button>
-            <button class="preset-pill" data-id="1458">#1458 (Royalty Cloak)</button>
-            <button id="btn-random" class="preset-pill random-pill">🎲 RANDOM TOKEN</button>
+          <div class="canvas-toggles">
+            <button id="toggle-grid-btn" class="toggle-btn" title="Toggle 10px Grid">GRID</button>
+            <button id="toggle-split-btn" class="toggle-btn" title="Compare Token">COMPARE</button>
           </div>
         </div>
-      </section>
 
-      <!-- Stage & Canvas Viewport -->
-      <section class="stage-section">
-        <div class="stage-grid">
-          <!-- Left: The Opepen Master Canvas -->
-          <div class="canvas-card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <span class="status-indicator"></span>
-                <span id="opepen-badge" class="stage-badge">OPEPEN #0001</span>
-                <span id="trait-summary-badge" class="sub-badge">BONE • VIOLET PALETTE</span>
-              </div>
-              <div class="view-toggles">
-                <button id="toggle-grid-btn" class="toggle-btn" title="Toggle 10px Pixel Grid">GRID</button>
-                <button id="toggle-split-btn" class="toggle-btn" title="Compare with Original Token">COMPARE</button>
-              </div>
-            </div>
-
-            <!-- Canvas Container -->
-            <div class="canvas-viewport" id="viewport">
-              <div id="opepen-canvas-container" class="svg-container"></div>
-              
-              <!-- Split Comparison View (Hidden by default) -->
-              <div id="original-token-container" class="original-container" style="display:none;">
-                <div class="orig-header">ORIGINAL ARGONAUT</div>
-                <div id="orig-svg-wrapper" class="orig-svg-wrapper"></div>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="canvas-actions">
-              <button id="btn-download-svg" class="action-btn">
-                <span class="icon">↓</span> VECTOR SVG
-              </button>
-              <button id="btn-download-jpg" class="action-btn">
-                <span class="icon">🖼</span> HD JPG
-              </button>
-              <button id="btn-download-png" class="action-btn">
-                <span class="icon">📸</span> HD PNG (2X)
-              </button>
-              <button id="btn-copy-svg" class="action-btn">
-                <span class="icon">📋</span> COPY SVG
-              </button>
-              <button id="btn-export-json" class="action-btn">
-                <span class="icon">📄</span> METADATA JSON
-              </button>
-            </div>
+        <div class="canvas-frame" id="viewport">
+          <div id="opepen-canvas-container" class="svg-stage"></div>
+          
+          <!-- Split Compare Container -->
+          <div id="original-token-container" class="original-stage" style="display:none;">
+            <div class="stage-tag">ORIGINAL ON-CHAIN TOKEN</div>
+            <div id="orig-svg-wrapper" class="orig-wrapper"></div>
           </div>
-
-          <!-- Right: Metadata & Architectural Inspector -->
-          <aside class="inspector-card">
-            <div class="inspector-header">
-              <h3>ON-CHAIN SPECIFICATIONS</h3>
-              <span id="token-contract-verified" class="verified-tag">✓ VERIFIED ETHEREUM</span>
-            </div>
-
-            <!-- Attributes Breakdown (Canonical Layer 0 to 6 Order) -->
-            <div class="traits-container">
-              <div class="trait-row">
-                <span class="trait-label">PALETTE (LAYER 0)</span>
-                <span id="meta-palette" class="trait-val">Violet (#75459C)</span>
-              </div>
-              <div class="trait-row">
-                <span class="trait-label">BONES (LAYER 1)</span>
-                <span id="meta-bones" class="trait-val">Bone</span>
-              </div>
-              <div class="trait-row">
-                <span class="trait-label">CLOAK (LAYER 2)</span>
-                <span id="meta-cloak" class="trait-val">None</span>
-              </div>
-              <div class="trait-row">
-                <span class="trait-label">RELIC (LAYER 3)</span>
-                <span id="meta-relic" class="trait-val">None</span>
-              </div>
-              <div class="trait-row">
-                <span class="trait-label">SIGHT (LAYER 4)</span>
-                <span id="meta-sight" class="trait-val">3D Glasses</span>
-              </div>
-              <div class="trait-row">
-                <span class="trait-label">ARTIFACT (LAYER 5)</span>
-                <span id="meta-artifact" class="trait-val">None</span>
-              </div>
-              <div class="trait-row">
-                <span class="trait-label">CROWN (LAYER 6)</span>
-                <span id="meta-crown" class="trait-val">Aegean Blue Beanie</span>
-              </div>
-            </div>
-
-            <!-- Geometric Math & Opepen Specs -->
-            <div class="specs-block">
-              <h4>OPEPEN GEOMETRY</h4>
-              <div class="spec-grid">
-                <div class="spec-item">
-                  <span class="spec-num">560×560</span>
-                  <span class="spec-name">CANVAS DIMENSIONS</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-num">0</span>
-                  <span class="spec-name">PIXEL OVERLAPS</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-num">380</span>
-                  <span class="spec-name">TAPERED TORSO PIXELS</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-num">184</span>
-                  <span class="spec-name">TAPERED BASE PIXELS</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-num">70px</span>
-                  <span class="spec-name">OPEPEN SIGNATURE GAP</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-num">100%</span>
-                  <span class="spec-name">ON-CHAIN PALETTES</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Mathematical Reflection Matrix Note -->
-            <div class="math-note">
-              <code>HEAD LEFT = [41 - gy_R, 55 - gx_R]</code>
-              <p>Anti-diagonal reflection of the upright Argonaut skull preserves micro-texture and creates dual-circle Opepen symmetry.</p>
-            </div>
-          </aside>
         </div>
-      </section>
 
-      <!-- Smart Contract Cloaks Master Suite Section -->
-      <section class="cloaks-section" id="cloaks-showcase">
-        <div class="section-heading">
-          <div>
-            <div class="section-badge-row">
-              <span class="badge-tag">LOCKED CANONICAL DESIGN</span>
-              <span class="badge-tag live-tag">100% ETHEREUM VERIFIED</span>
-            </div>
-            <h2>SMART CONTRACT CLOAK ARCHETYPES</h2>
-            <p>The 5 authentic Ethereum smart contract cloaks with locked Option 3 Dual-Wing Sweep drapery and full collar connection.</p>
+        <!-- Export Actions Toolbar -->
+        <div class="actions-bar">
+          <button id="btn-download-svg" class="action-btn">SVG</button>
+          <button id="btn-download-png" class="action-btn">PNG</button>
+          <button id="btn-download-jpg" class="action-btn">JPG</button>
+          <button id="btn-copy-svg" class="action-btn">COPY SVG</button>
+          <button id="btn-export-json" class="action-btn">JSON</button>
+        </div>
+      </div>
+
+      <!-- Specification & Inspector Panel -->
+      <aside class="specs-panel">
+        <div class="specs-header">
+          <span class="specs-title">TRAIT ARCHITECTURE</span>
+          <span id="token-contract-verified" class="status-tag">ON-CHAIN VERIFIED</span>
+        </div>
+
+        <!-- Layer Breakdown List -->
+        <div class="layers-list">
+          <div class="layer-item">
+            <span class="layer-num">00</span>
+            <span class="layer-name">PALETTE</span>
+            <span id="meta-palette" class="layer-val">—</span>
           </div>
-          <span class="gallery-counter">5 CLOAKS</span>
-        </div>
-
-        <div id="cloaks-grid" class="cloaks-grid">
-          <!-- Populated dynamically via app.js -->
-        </div>
-      </section>
-
-      <!-- Curated Collection Gallery Section -->
-      <section class="gallery-section">
-        <div class="section-heading">
-          <div>
-            <h2>CURATED ARGONAUT OPEPEN EDITIONS</h2>
-            <p>Select any edition to load its full vector archetype into the synthesizer stage</p>
+          <div class="layer-item">
+            <span class="layer-num">01</span>
+            <span class="layer-name">BONES</span>
+            <span id="meta-bones" class="layer-val">—</span>
           </div>
-          <span class="gallery-counter">20 EDITIONS</span>
+          <div class="layer-item">
+            <span class="layer-num">02</span>
+            <span class="layer-name">CLOAK</span>
+            <span id="meta-cloak" class="layer-val">—</span>
+          </div>
+          <div class="layer-item">
+            <span class="layer-num">03</span>
+            <span class="layer-name">RELIC</span>
+            <span id="meta-relic" class="layer-val">—</span>
+          </div>
+          <div class="layer-item">
+            <span class="layer-num">04</span>
+            <span class="layer-name">SIGHT</span>
+            <span id="meta-sight" class="layer-val">—</span>
+          </div>
+          <div class="layer-item">
+            <span class="layer-num">05</span>
+            <span class="layer-name">ARTIFACT</span>
+            <span id="meta-artifact" class="layer-val">—</span>
+          </div>
+          <div class="layer-item">
+            <span class="layer-num">06</span>
+            <span class="layer-name">CROWN</span>
+            <span id="meta-crown" class="layer-val">—</span>
+          </div>
         </div>
 
-        <div id="gallery-grid" class="gallery-grid">
-          <!-- Populated dynamically via app.js -->
+        <!-- Technical Parameters -->
+        <div class="params-box">
+          <div class="param-cell">
+            <span class="param-val">560×560</span>
+            <span class="param-label">DIMENSIONS</span>
+          </div>
+          <div class="param-cell">
+            <span class="param-val">0</span>
+            <span class="param-label">PATH OVERLAPS</span>
+          </div>
+          <div class="param-cell">
+            <span class="param-val">564 px</span>
+            <span class="param-label">CLOAK DRAPE</span>
+          </div>
+          <div class="param-cell">
+            <span class="param-val">100%</span>
+            <span class="param-label">PURE VECTOR</span>
+          </div>
         </div>
-      </section>
+
+        <!-- Mathematical Matrix Formula -->
+        <div class="matrix-box">
+          <span class="matrix-code">HEAD_LEFT = [41 - gy, 55 - gx]</span>
+          <p class="matrix-desc">Anti-diagonal reflection of upright Argonaut skull creates dual-circle Opepen symmetry with zero duplicate paths.</p>
+        </div>
+      </aside>
     </main>
 
-    <!-- Minimalist Footer -->
+    <!-- Cloaks Showcase Gallery -->
+    <section class="gallery-block" id="cloaks-showcase">
+      <div class="gallery-header">
+        <div class="gallery-title-wrap">
+          <span class="gallery-tag">CANONICAL ARCHETYPES</span>
+          <h2 class="gallery-heading">SMART CONTRACT CLOAKS</h2>
+        </div>
+        <span class="gallery-count">5 ARCHETYPES</span>
+      </div>
+      <div id="cloaks-grid" class="cloaks-grid">
+        <!-- Injected dynamically via app.js -->
+      </div>
+    </section>
+
+    <!-- Curated Editions Gallery -->
+    <section class="gallery-block">
+      <div class="gallery-header">
+        <div class="gallery-title-wrap">
+          <span class="gallery-tag">CURATED EDITIONS</span>
+          <h2 class="gallery-heading">ARGONAUT OPEPEN EDITIONS</h2>
+        </div>
+        <span class="gallery-count">20 EDITIONS</span>
+      </div>
+      <div id="gallery-grid" class="editions-grid">
+        <!-- Injected dynamically via app.js -->
+      </div>
+    </section>
+
+    <!-- Clean Minimalist Footer -->
     <footer class="footer">
-      <div class="footer-left">
-        <span>ARGONAUTS × OPEPEN STUDIO</span>
-        <span class="footer-separator">•</span>
-        <span>MUSE FACKTORY ON-CHAIN ENGINE</span>
+      <div class="footer-meta">
+        <span>ARGONAUT × OPEPEN STUDIO</span>
+        <span>•</span>
+        <span>0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C</span>
+        <span>•</span>
+        <span>MUSE FACKTORY</span>
       </div>
-      <div class="footer-right">
-        <span>PIXEL-PERFECT • ZERO OVERLAPS • PURE VECTOR</span>
-      </div>
+      <div class="footer-copy">PIXEL-PERFECT • ZERO OVERLAPS • PURE ON-CHAIN VECTOR</div>
     </footer>
   </div>
 
   <!-- Toast Notification -->
   <div id="toast" class="toast"></div>
 
-  <!-- Engine Data and Application Scripts -->
-  <script src="engine_data.js?v=20260905_cloak_master"></script>
-  <script src="app.js?v=20260905_cloak_master"></script>
+  <!-- Engine Data & Application Scripts -->
+  <script src="engine_data.js?v=20260905_minimal_v1"></script>
+  <script src="app.js?v=20260905_minimal_v1"></script>
 </body>
 </html>

@@ -10,8 +10,8 @@
   <meta http-equiv="Expires" content="0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260905_minimal_v1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=20260905_minimal_v2">
 </head>
 <body>
   <div class="app-container">
@@ -23,57 +23,12 @@
       </div>
 
       <nav class="nav">
-        <a href="#cloaks-showcase" class="nav-link">CLOAKS</a>
-        <a href="https://etherscan.io/address/0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C" target="_blank" class="nav-link" title="Contract">0x387C...392C</a>
+        <a href="https://etherscan.io/address/0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C" target="_blank" class="nav-link" title="Ethereum Smart Contract">0x387C...392C</a>
         <a href="https://opensea.io/collection/the-argonauts" target="_blank" class="nav-link">OPENSEA</a>
       </nav>
     </header>
 
-    <!-- Synthesis Control Bar -->
-    <section class="control-bar">
-      <div class="input-group">
-        <label for="token-id-input" class="input-label">TOKEN</label>
-        <input 
-          type="number" 
-          id="token-id-input" 
-          placeholder="0001" 
-          min="1" 
-          max="9999" 
-          value="20" 
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <button id="btn-generate" class="btn-synthesize">
-          <span class="btn-text">SYNTHESIZE</span>
-          <span class="btn-spinner" style="display:none;">…</span>
-        </button>
-      </div>
-
-      <!-- Compact Presets Strip -->
-      <div class="presets-strip">
-        <div class="preset-group">
-          <span class="preset-label">CLOAKS</span>
-          <button class="preset-pill cloak-pill active" data-id="20">#20 Clergy</button>
-          <button class="preset-pill cloak-pill" data-id="125">#125 Servant</button>
-          <button class="preset-pill cloak-pill" data-id="28">#28 Death</button>
-          <button class="preset-pill cloak-pill" data-id="107">#107 Royalty</button>
-          <button class="preset-pill cloak-pill" data-id="18">#18 Ivory</button>
-        </div>
-        <div class="preset-divider"></div>
-        <div class="preset-group">
-          <span class="preset-label">CURATED</span>
-          <button class="preset-pill" data-id="1">#1</button>
-          <button class="preset-pill" data-id="2">#2</button>
-          <button class="preset-pill" data-id="3">#3</button>
-          <button class="preset-pill" data-id="5">#5</button>
-          <button class="preset-pill" data-id="42">#42</button>
-          <button class="preset-pill" data-id="1458">#1458</button>
-          <button id="btn-random" class="preset-pill random-pill">RANDOM</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Main Workspace Stage -->
+    <!-- Main Workspace Stage (Vertically Fitted to Viewport) -->
     <main class="stage-container">
       <!-- Artwork Canvas Panel -->
       <div class="canvas-panel">
@@ -89,6 +44,7 @@
           </div>
         </div>
 
+        <!-- Canvas Viewport (Auto-Fitted) -->
         <div class="canvas-frame" id="viewport">
           <div id="opepen-canvas-container" class="svg-stage"></div>
           
@@ -99,24 +55,43 @@
           </div>
         </div>
 
-        <!-- Export Actions Toolbar -->
+        <!-- Unified Actions & Token Controls Bar -->
         <div class="actions-bar">
-          <button id="btn-download-svg" class="action-btn">SVG</button>
-          <button id="btn-download-png" class="action-btn">PNG</button>
-          <button id="btn-download-jpg" class="action-btn">JPG</button>
-          <button id="btn-copy-svg" class="action-btn">COPY SVG</button>
-          <button id="btn-export-json" class="action-btn">JSON</button>
+          <!-- Integrated # Token ID Input -->
+          <div class="token-input-control">
+            <span class="token-prefix">#</span>
+            <input 
+              type="number" 
+              id="token-id-input" 
+              placeholder="0020" 
+              min="1" 
+              max="9999" 
+              value="20" 
+              autocomplete="off"
+              spellcheck="false"
+              title="Enter Token ID (1-9999)"
+            />
+            <button id="btn-generate" class="btn-token-go" title="Synthesize Token ID">↵</button>
+          </div>
+
+          <!-- Random Shuffle Button -->
+          <button id="btn-random" class="action-btn btn-random" title="Random Token Shuffle">🎲 RANDOM</button>
+
+          <!-- Export Actions -->
+          <button id="btn-download-svg" class="action-btn" title="Download Vector SVG">SVG</button>
+          <button id="btn-download-png" class="action-btn" title="Download HD PNG">PNG</button>
+          <button id="btn-download-jpg" class="action-btn" title="Download HD JPG">JPG</button>
         </div>
       </div>
 
-      <!-- Specification & Inspector Panel -->
+      <!-- Specification & Trait Architecture Panel -->
       <aside class="specs-panel">
         <div class="specs-header">
           <span class="specs-title">TRAIT ARCHITECTURE</span>
           <span id="token-contract-verified" class="status-tag">ON-CHAIN VERIFIED</span>
         </div>
 
-        <!-- Layer Breakdown List -->
+        <!-- Layer Breakdown List (00 to 06) -->
         <div class="layers-list">
           <div class="layer-item">
             <span class="layer-num">00</span>
@@ -155,7 +130,7 @@
           </div>
         </div>
 
-        <!-- Technical Parameters -->
+        <!-- Technical Parameters Grid -->
         <div class="params-box">
           <div class="param-cell">
             <span class="param-val">560×560</span>
@@ -183,28 +158,14 @@
       </aside>
     </main>
 
-    <!-- Cloaks Showcase Gallery -->
-    <section class="gallery-block" id="cloaks-showcase">
-      <div class="gallery-header">
-        <div class="gallery-title-wrap">
-          <span class="gallery-tag">CANONICAL ARCHETYPES</span>
-          <h2 class="gallery-heading">SMART CONTRACT CLOAKS</h2>
-        </div>
-        <span class="gallery-count">5 ARCHETYPES</span>
-      </div>
-      <div id="cloaks-grid" class="cloaks-grid">
-        <!-- Injected dynamically via app.js -->
-      </div>
-    </section>
-
-    <!-- Curated Editions Gallery -->
+    <!-- Curated Editions Gallery (15 Editions) -->
     <section class="gallery-block">
       <div class="gallery-header">
         <div class="gallery-title-wrap">
           <span class="gallery-tag">CURATED EDITIONS</span>
           <h2 class="gallery-heading">ARGONAUT OPEPEN EDITIONS</h2>
         </div>
-        <span class="gallery-count">20 EDITIONS</span>
+        <span class="gallery-count">15 EDITIONS</span>
       </div>
       <div id="gallery-grid" class="editions-grid">
         <!-- Injected dynamically via app.js -->
@@ -228,7 +189,7 @@
   <div id="toast" class="toast"></div>
 
   <!-- Engine Data & Application Scripts -->
-  <script src="engine_data.js?v=20260905_minimal_v1"></script>
-  <script src="app.js?v=20260905_minimal_v1"></script>
+  <script src="engine_data.js?v=20260905_minimal_v2"></script>
+  <script src="app.js?v=20260905_minimal_v2"></script>
 </body>
 </html>

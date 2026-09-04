@@ -607,8 +607,8 @@ async function loadToken(tokenId) {
   document.getElementById('token-id-input').value = tokenId;
 
   const btnGen = document.getElementById('btn-generate');
-  const btnSpinner = btnGen.querySelector('.btn-spinner');
-  btnSpinner.style.display = 'inline-block';
+  const btnSpinner = btnGen ? btnGen.querySelector('.btn-spinner') : null;
+  if (btnSpinner) btnSpinner.style.display = 'inline-block';
 
   // Update active pill
   document.querySelectorAll('.preset-pill').forEach(pill => {
@@ -670,7 +670,7 @@ async function loadToken(tokenId) {
       }
     }
   }).catch(() => {}).finally(() => {
-    btnSpinner.style.display = 'none';
+    if (btnSpinner) btnSpinner.style.display = 'none';
   });
 }
 
@@ -839,7 +839,7 @@ window.loadCloak = function(tokenId) {
   }
 };
 
-// 20 Curated Editions Catalog
+// 15 Curated Editions Catalog
 const CURATED_EDITIONS = [
   { id: 1, name: "Cyber Alien Opepen", bone: "Alien", pal: "Void", traits: { Palette: "Void", Bones: "Alien", Sight: "3D Glasses" } },
   { id: 2, name: "Radioactive Void Opepen", bone: "Radioactive", pal: "Charcoal", traits: { Palette: "Radioactive Void Charcoal", Bones: "Radioactive", Sight: "Digital", Artifact: "Vape (Dragon's Breath)" } },
@@ -855,12 +855,7 @@ const CURATED_EDITIONS = [
   { id: 12, name: "Emerald Gold Opepen", bone: "Gold", pal: "Emerald", traits: { Palette: "Emerald", Bones: "Gold", Sight: "3D Glasses", Artifact: "Woodpipe" } },
   { id: 13, name: "Bubblegum Silver", bone: "Silver", pal: "Bubblegum", traits: { Palette: "Bubblegum", Bones: "Silver", Sight: "Glasses", Artifact: "Woodpipe" } },
   { id: 14, name: "Bright Lilac Coral", bone: "Coral", pal: "Bright Lilac", traits: { Palette: "Bright Lilac", Bones: "Coral", Crown: "Aegean Blue Beanie", Artifact: "Woodpipe" } },
-  { id: 15, name: "Seafoam Alien Opepen", bone: "Alien", pal: "Seafoam", traits: { Palette: "Radioactive Seafoam", Bones: "Alien", Sight: "3D Glasses" } },
-  { id: 16, name: "Wine Petrified Opepen", bone: "Petrified", pal: "Wine", traits: { Palette: "Wine", Bones: "Petrified", Sight: "Shades", Artifact: "Woodpipe" } },
-  { id: 17, name: "Siren Prehistoric", bone: "Prehistoric", pal: "Siren", traits: { Palette: "Siren", Bones: "Prehistoric", Sight: "Eye Patch" } },
-  { id: 18, name: "Storm Silver Opepen", bone: "Silver", pal: "Storm", traits: { Palette: "Storm", Bones: "Silver", Sight: "3D Glasses" } },
-  { id: 19, name: "Void Cyan Bone", bone: "Bone", pal: "Void Cyan", traits: { Palette: "Void Cyan", Bones: "Bone", Sight: "3D Glasses" } },
-  { id: 20, name: "Ancient Floral Royalty", bone: "Floral", pal: "Ancient", traits: { Palette: "Ancient", Bones: "Floral", Cloak: "Royalty" } }
+  { id: 15, name: "Seafoam Alien Opepen", bone: "Alien", pal: "Seafoam", traits: { Palette: "Radioactive Seafoam", Bones: "Alien", Sight: "3D Glasses" } }
 ];
 
 function populateGallery() {
@@ -966,15 +961,19 @@ function setupEventListeners() {
   document.getElementById('btn-download-svg').addEventListener('click', downloadSVG);
   document.getElementById('btn-download-jpg').addEventListener('click', () => downloadImage('jpeg', 2));
   document.getElementById('btn-download-png').addEventListener('click', () => downloadImage('png', 2));
-  document.getElementById('btn-copy-svg').addEventListener('click', copySVGCode);
-  document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+  const btnCopy = document.getElementById('btn-copy-svg');
+  if (btnCopy) btnCopy.addEventListener('click', copySVGCode);
+  const btnJson = document.getElementById('btn-export-json');
+  if (btnJson) btnJson.addEventListener('click', exportJSON);
 }
 
 // App Initialization
 window.addEventListener('DOMContentLoaded', () => {
   initEngine();
   setupEventListeners();
-  populateCloaksShowcase();
+  if (document.getElementById('cloaks-grid')) {
+    populateCloaksShowcase();
+  }
   populateGallery();
   loadToken(20); // Default to Token #20 (Clergy Cloak) so user immediately sees locked cloak design!
 });

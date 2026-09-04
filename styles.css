@@ -1,6 +1,6 @@
 /* ==========================================================================
    ARGONAUT × OPEPEN STUDIO — MINIMALIST ARCHITECTURAL DESIGN SYSTEM
-   Clean, Monochromatic, Swiss High-Fashion Crypto-Art Aesthetics
+   Compact, Zero-Scroll Viewport Layout, Monochromatic Swiss Aesthetics
    ========================================================================== */
 
 :root {
@@ -24,10 +24,9 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --radius-xs: 2px;
+  --radius-xs: 3px;
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-pill: 9999px;
 
   --transition-fast: 0.12s ease;
   --transition-smooth: 0.22s cubic-bezier(0.16, 1, 0.3, 1);
@@ -53,61 +52,61 @@ html {
 body {
   background-color: var(--bg-pitch);
   color: var(--text-primary);
-  line-height: 1.45;
+  line-height: 1.4;
   overflow-x: hidden;
 }
 
-/* Layout Wrapper */
+/* App Container */
 .app-container {
-  max-width: 1280px;
+  max-width: 1140px;
   margin: 0 auto;
-  padding: 0 24px 80px 24px;
+  padding: 0 20px 60px 20px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 20px;
 }
 
 /* ==========================================================================
-   HEADER / NAVIGATION
+   HEADER
    ========================================================================== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 0 20px 0;
+  padding: 16px 0 14px 0;
   border-bottom: 1px solid var(--border-hairline);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .brand-glyph {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-primary);
   line-height: 1;
 }
 
 .brand-name {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   color: var(--text-primary);
 }
 
 .nav {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .nav-link {
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--text-secondary);
   text-decoration: none;
   transition: color var(--transition-fast);
@@ -118,179 +117,38 @@ body {
 }
 
 /* ==========================================================================
-   SYNTHESIS CONTROL BAR
-   ========================================================================== */
-.control-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-}
-
-.input-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--bg-pitch);
-  border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-sm);
-  padding: 4px 6px 4px 14px;
-  transition: border-color var(--transition-fast);
-}
-
-.input-group:focus-within {
-  border-color: var(--border-focus);
-}
-
-.input-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: var(--text-tertiary);
-  user-select: none;
-}
-
-#token-id-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text-primary);
-  letter-spacing: 0.05em;
-  min-width: 80px;
-}
-
-#token-id-input::-webkit-outer-spin-button,
-#token-id-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-#token-id-input[type=number] {
-  -moz-appearance: textfield;
-}
-
-.btn-synthesize {
-  background: var(--text-primary);
-  color: var(--text-inverse);
-  border: none;
-  border-radius: var(--radius-xs);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: opacity var(--transition-fast), background var(--transition-fast);
-  white-space: nowrap;
-}
-
-.btn-synthesize:hover {
-  opacity: 0.9;
-}
-
-.btn-synthesize:active {
-  transform: scale(0.99);
-}
-
-/* Presets Strip */
-.presets-strip {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.preset-group {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.preset-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: var(--text-tertiary);
-  margin-right: 4px;
-}
-
-.preset-divider {
-  width: 1px;
-  height: 16px;
-  background: var(--border-hairline);
-  margin: 0 4px;
-}
-
-.preset-pill {
-  background: transparent;
-  border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 4px 10px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  user-select: none;
-}
-
-.preset-pill:hover {
-  border-color: var(--border-hover);
-  color: var(--text-primary);
-}
-
-.preset-pill.active {
-  background: var(--text-primary);
-  border-color: var(--text-primary);
-  color: var(--text-inverse);
-  font-weight: 600;
-}
-
-.random-pill {
-  border-style: dashed;
-}
-
-/* ==========================================================================
-   WORKSPACE STAGE
+   MAIN STAGE (VERTICALLY FITTED TO SCREEN)
    ========================================================================== */
 .stage-container {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 24px;
-  align-items: start;
+  gap: 20px;
+  align-items: stretch;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 880px) {
   .stage-container {
     grid-template-columns: 1fr;
   }
 }
 
-/* Canvas Panel */
+/* Canvas Panel (Left) */
 .canvas-panel {
   background: var(--bg-surface);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md);
-  padding: 20px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .canvas-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-hairline);
 }
 
@@ -299,7 +157,7 @@ body {
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .badge-token {
@@ -314,8 +172,7 @@ body {
 
 .badge-trait {
   color: var(--text-secondary);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .canvas-toggles {
@@ -330,8 +187,8 @@ body {
   color: var(--text-secondary);
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.08em;
-  padding: 4px 8px;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -347,16 +204,16 @@ body {
   color: var(--text-primary);
 }
 
-/* Canvas Viewport */
+/* Canvas Viewport (Auto-Fitted so full Opepen fits without scrolling) */
 .canvas-frame {
   position: relative;
   width: 100%;
+  max-width: min(390px, 48vh);
   aspect-ratio: 1 / 1;
-  max-width: 560px;
   margin: 0 auto;
   background: #000000;
   border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -378,7 +235,7 @@ body {
   shape-rendering: crispEdges;
 }
 
-/* Compare View */
+/* Split Compare View */
 .original-stage {
   position: absolute;
   top: 0;
@@ -393,9 +250,9 @@ body {
 .stage-tag {
   font-family: var(--font-mono);
   font-size: 9px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: var(--text-tertiary);
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border-hairline);
 }
 
@@ -412,32 +269,95 @@ body {
   shape-rendering: crispEdges;
 }
 
-/* Actions Bar */
+/* ==========================================================================
+   ACTIONS BAR & TOKEN CONTROLS
+   ========================================================================== */
 .actions-bar {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding-top: 4px;
+  flex-wrap: nowrap;
 }
 
-@media (max-width: 600px) {
-  .actions-bar {
-    grid-template-columns: repeat(3, 1fr);
-  }
+/* Token Input Capsule Control */
+.token-input-control {
+  display: flex;
+  align-items: center;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-xs);
+  padding: 0 4px 0 8px;
+  height: 32px;
+  transition: border-color var(--transition-fast);
 }
 
+.token-input-control:focus-within {
+  border-color: var(--border-focus);
+}
+
+.token-prefix {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  user-select: none;
+  margin-right: 2px;
+}
+
+#token-id-input {
+  width: 52px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+#token-id-input::-webkit-outer-spin-button,
+#token-id-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+#token-id-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.btn-token-go {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color var(--transition-fast);
+}
+
+.btn-token-go:hover {
+  color: var(--text-primary);
+}
+
+/* Action Buttons */
 .action-btn {
+  flex: 1;
+  height: 32px;
   background: var(--bg-surface-subtle);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-xs);
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  padding: 8px 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  padding: 0 8px;
   cursor: pointer;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .action-btn:hover {
@@ -450,24 +370,35 @@ body {
   transform: scale(0.98);
 }
 
+.btn-random {
+  flex: 1.3;
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.btn-random:hover {
+  border-color: var(--border-focus);
+}
+
 /* ==========================================================================
-   SPECIFICATIONS PANEL
+   TRAIT ARCHITECTURE / SPECS PANEL (Right Column)
    ========================================================================== */
 .specs-panel {
   background: var(--bg-surface);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md);
-  padding: 20px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .specs-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-hairline);
 }
 
@@ -475,14 +406,14 @@ body {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: var(--text-primary);
 }
 
 .status-tag {
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.1em;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
   color: var(--text-tertiary);
   border: 1px solid var(--border-hairline);
   padding: 2px 6px;
@@ -498,10 +429,10 @@ body {
 .layer-item {
   display: flex;
   align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.035);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 .layer-item:last-child {
@@ -509,15 +440,15 @@ body {
 }
 
 .layer-num {
-  width: 28px;
+  width: 24px;
   color: var(--text-tertiary);
-  font-size: 10px;
+  font-size: 9.5px;
 }
 
 .layer-name {
-  width: 80px;
+  width: 76px;
   color: var(--text-secondary);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .layer-val {
@@ -530,19 +461,18 @@ body {
   white-space: nowrap;
 }
 
-/* Parameter Grid */
+/* Parameters Box */
 .params-box {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding-top: 4px;
+  gap: 6px;
 }
 
 .param-cell {
   background: var(--bg-surface-subtle);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-xs);
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -550,15 +480,15 @@ body {
 
 .param-val {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .param-label {
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
   color: var(--text-tertiary);
 }
 
@@ -567,183 +497,84 @@ body {
   background: var(--bg-surface-subtle);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-xs);
-  padding: 12px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .matrix-code {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9.5px;
   color: var(--text-primary);
   background: var(--bg-pitch);
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: var(--radius-xs);
   display: inline-block;
-  letter-spacing: 0.04em;
 }
 
 .matrix-desc {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-tertiary);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 /* ==========================================================================
-   GALLERY BLOCKS (CLOAKS & EDITIONS)
+   CURATED EDITIONS GALLERY (15 EDITIONS)
    ========================================================================== */
 .gallery-block {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 16px;
+  gap: 14px;
+  margin-top: 10px;
 }
 
 .gallery-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-hairline);
 }
 
 .gallery-title-wrap {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .gallery-tag {
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.14em;
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
   color: var(--text-tertiary);
 }
 
 .gallery-heading {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--text-primary);
 }
 
 .gallery-count {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-tertiary);
 }
 
-/* Cloaks Grid */
-.cloaks-grid {
+.editions-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 1080px) {
-  .cloaks-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 680px) {
-  .cloaks-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.cloak-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 10px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.cloak-card:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-2px);
-}
-
-.cloak-thumb {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  background: #000000;
-  border-radius: var(--radius-xs);
-  overflow: hidden;
-}
-
-.cloak-thumb svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  shape-rendering: crispEdges;
-}
-
-.cloak-card-badge {
-  display: none;
-}
-
-.cloak-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.cloak-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.cloak-name {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.cloak-token-tag {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-tertiary);
-}
-
-.cloak-material {
-  font-family: var(--font-body);
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
-.cloak-drape-note {
-  font-family: var(--font-body);
-  font-size: 10px;
-  color: var(--text-tertiary);
-  display: none;
-}
-
-.cloak-load-btn {
-  display: none;
-}
-
-/* Editions Grid */
-.editions-grid, .gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 12px;
 }
 
 .gallery-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -761,7 +592,7 @@ body {
   width: 100%;
   aspect-ratio: 1 / 1;
   background: #000000;
-  border-radius: var(--radius-xs);
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -780,7 +611,7 @@ body {
 
 .gallery-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
@@ -790,7 +621,7 @@ body {
 
 .gallery-meta {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 8.5px;
   color: var(--text-tertiary);
   white-space: nowrap;
   overflow: hidden;
@@ -804,14 +635,14 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 0 10px 0;
+  padding: 20px 0 10px 0;
   border-top: 1px solid var(--border-hairline);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9.5px;
   color: var(--text-tertiary);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
 .footer-meta {
@@ -825,18 +656,18 @@ body {
    ========================================================================== */
 .toast {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 20px;
+  right: 20px;
   background: var(--bg-pitch);
   color: var(--text-primary);
   border: 1px solid var(--border-hover);
   border-radius: var(--radius-xs);
-  padding: 10px 16px;
+  padding: 8px 14px;
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  letter-spacing: 0.06em;
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(6px);
   pointer-events: none;
   transition: all 0.2s ease;
   z-index: 1000;

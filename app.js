@@ -1,5 +1,5 @@
 /**
- * ARGONAUT × OPEPEN STUDIO
+ * ARGOPEPEN STUDIO
  * Minimalist Black & White On-Chain Synthesizer & Vector Renderer
  * Layer definitions, naming, and paint sequence are strictly identical to the Argonauts smart contract:
  * - Layer 0: Palette (LAYER_BACKGROUND)

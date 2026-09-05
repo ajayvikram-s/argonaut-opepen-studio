@@ -1084,7 +1084,7 @@ function showToast(msg) {
 // Download Artwork Helpers (SVG, PNG, JPG)
 function getActiveOpepenSVG() {
   if (currentOpepenSVG) return currentOpepenSVG;
-  const tid = currentTokenId || 20;
+  const tid = currentTokenId || 7990;
   const meta = getOfflineTokenTraits(tid);
   const { svg } = synthesizeOpepen(tid, meta);
   currentOpepenSVG = svg;
@@ -1286,7 +1286,7 @@ function setupEventListeners() {
         if (!q) {
           renderGallery(defaultRandomEditions);
         } else {
-          const matches = searchTokensByTrait(q, 15);
+          const matches = searchTokensByTrait(q, 20);
           renderGallery(matches, q);
         }
       }, 70);
@@ -1320,5 +1320,5 @@ window.addEventListener('DOMContentLoaded', () => {
     populateCloaksShowcase();
   }
   populateGallery();
-  loadToken(20); // Default to Token #20 (Clergy Cloak) so user immediately sees locked cloak design!
+  loadToken(7990); // Default to Token #7990
 });

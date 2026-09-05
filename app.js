@@ -1244,6 +1244,43 @@ function setupEventListeners() {
       searchInput.focus();
     });
   }
+
+  // Copy Traits button in Trait Architecture panel
+  const btnCopyTraits = document.getElementById('btn-copy-traits');
+  if (btnCopyTraits) {
+    btnCopyTraits.addEventListener('click', () => {
+      const tid = currentTokenId || 20;
+      const tidStr = tid.toString().padStart(4, '0');
+      const palette = document.getElementById('meta-palette')?.textContent || '—';
+      const bones = document.getElementById('meta-bones')?.textContent || '—';
+      const cloak = document.getElementById('meta-cloak')?.textContent || '—';
+      const relic = document.getElementById('meta-relic')?.textContent || '—';
+      const sight = document.getElementById('meta-sight')?.textContent || '—';
+      const artifact = document.getElementById('meta-artifact')?.textContent || '—';
+      const crown = document.getElementById('meta-crown')?.textContent || '—';
+
+      const text = [
+        `ARGOPEPEN #${tidStr}`,
+        `00 PALETTE: ${palette}`,
+        `01 BONES: ${bones}`,
+        `02 CLOAK: ${cloak}`,
+        `03 RELIC: ${relic}`,
+        `04 SIGHT: ${sight}`,
+        `05 ARTIFACT: ${artifact}`,
+        `06 CROWN: ${crown}`
+      ].join('\n');
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(`Copied traits for #${tidStr}`);
+        }).catch(() => {
+          showToast(`Copied traits for #${tidStr}`);
+        });
+      } else {
+        showToast(`Copied traits for #${tidStr}`);
+      }
+    });
+  }
 }
 
 // App Initialization

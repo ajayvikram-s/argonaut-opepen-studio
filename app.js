@@ -706,10 +706,10 @@ ${basePaths.join('\n')}
 
 
 function updateTraitBadgesAndInspector(tokenId, traits) {
-  document.getElementById('opepen-badge').textContent = `OPEPEN #${tokenId.toString().padStart(4, '0')}`;
-  const cloakLabel = traits.cloak !== 'None' ? ` • ${traits.cloak.toUpperCase()} CLOAK` : '';
-  const artLabel = traits.artifact !== 'None' ? ` • ${traits.artifact.toUpperCase()}` : '';
-  document.getElementById('trait-summary-badge').textContent = `${traits.bones} • ${traits.palette} PALETTE${cloakLabel}${artLabel}`;
+  const badgeEl = document.getElementById('opepen-badge');
+  if (badgeEl) badgeEl.textContent = `ARGOPEPEN #${tokenId.toString().padStart(4, '0')}`;
+  const traitSummaryEl = document.getElementById('trait-summary-badge');
+  if (traitSummaryEl) traitSummaryEl.textContent = '';
 
   // Update Inspector Traits in Canonical Contract Layer Order (0..6):
   document.getElementById('meta-palette').textContent = `${traits.palette} (${traits.paletteHex})`;

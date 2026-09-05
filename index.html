@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260905_uipolish_v3">
+  <link rel="stylesheet" href="styles.css?v=20260905_uipolish_v4">
 </head>
 <body>
   <div class="app-container">
@@ -148,12 +148,16 @@
           </div>
         </div>
 
-        <!-- Aligned Bottom Action Bar -->
+        <!-- Matching Aligned Bottom Action Bar -->
         <div class="specs-bottom-bar">
-          <button id="btn-copy-traits" class="action-btn btn-copy-traits" title="Copy Current Token Traits">
-            <span class="btn-copy-icon">📋</span>
-            <span>COPY TRAITS</span>
-          </button>
+          <a id="btn-etherscan" href="https://etherscan.io/address/0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C" target="_blank" rel="noopener noreferrer" class="specs-action-btn" title="View Argonauts Contract on Etherscan">
+            <span>ETHERSCAN</span>
+            <span class="specs-link-arrow">↗</span>
+          </a>
+          <a id="btn-opensea" href="https://opensea.io/assets/ethereum/0x387c41b0b2f1128de44db1bcf8baad085f26392c/20" target="_blank" rel="noopener noreferrer" class="specs-action-btn" title="View Current Token on OpenSea">
+            <span>OPENSEA</span>
+            <span class="specs-link-arrow">↗</span>
+          </a>
         </div>
       </aside>
     </main>
@@ -204,7 +208,7 @@
   <div id="toast" class="toast"></div>
 
   <!-- Engine Data & Application Scripts -->
-  <script src="engine_data.js?v=20260905_uipolish_v3"></script>
-  <script src="app.js?v=20260905_uipolish_v3"></script>
+  <script src="engine_data.js?v=20260905_uipolish_v4"></script>
+  <script src="app.js?v=20260905_uipolish_v4"></script>
 </body>
 </html>

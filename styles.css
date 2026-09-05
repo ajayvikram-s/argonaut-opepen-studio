@@ -281,13 +281,14 @@ body {
   border-radius: var(--radius-xs);
 }
 
-@media (max-width: 520px) {
+@media (max-width: 640px) {
   .canvas-frame {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 4px 0;
   }
   .svg-stage {
-    max-width: 320px;
+    max-width: 100%;
   }
 }
 
@@ -609,45 +610,47 @@ body {
 
 /* Matching Aligned Bottom Action Bar */
 .specs-bottom-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   width: 100%;
   height: 36px;
   box-sizing: border-box;
 }
 
-.btn-copy-traits {
-  width: 100%;
+.specs-action-btn {
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   background: var(--bg-surface-subtle);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-xs);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 500;
   letter-spacing: 0.06em;
-  cursor: pointer;
+  text-decoration: none;
   transition: all var(--transition-fast);
   box-sizing: border-box;
 }
 
-.btn-copy-traits:hover {
+.specs-action-btn:hover {
   background: var(--bg-hover);
   border-color: var(--border-hover);
-  color: #ffffff;
+  color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
-.btn-copy-traits:active {
+.specs-action-btn:active {
   transform: scale(0.98);
 }
 
-.btn-copy-icon {
-  font-size: 12px;
-  opacity: 0.85;
+.specs-link-arrow {
+  font-size: 10px;
+  opacity: 0.75;
 }
 
 /* ==========================================================================
@@ -957,4 +960,266 @@ body {
 .toast.show {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ==========================================================================
+   MOBILE OPTIMIZATION (FLUID FULL VIEWPORT FIT)
+   ========================================================================== */
+@media (max-width: 640px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .app-container {
+    padding: 0 10px 40px 10px;
+    gap: 12px;
+  }
+
+  /* Header */
+  .header {
+    padding: 10px 0 8px 0;
+  }
+
+  .brand-glyph {
+    font-size: 13px;
+  }
+
+  .brand-name {
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .nav {
+    gap: 6px;
+  }
+
+  .nav-explore-label {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+
+  .nav-explore-links {
+    gap: 6px;
+  }
+
+  .nav-icon-link {
+    width: 26px;
+    height: 26px;
+    padding: 3px;
+  }
+
+  .nav-site-icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* Stage Container */
+  .stage-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Canvas Panel */
+  .canvas-panel {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .canvas-header {
+    padding-bottom: 8px;
+  }
+
+  .badge-token {
+    font-size: 10px;
+  }
+
+  /* Keep Side-by-Side Artworks on Mobile */
+  .canvas-frame {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 2px 0;
+    max-width: 100%;
+  }
+
+  .svg-stage {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Actions Bar */
+  .actions-bar {
+    gap: 6px;
+  }
+
+  .token-input-control {
+    height: 34px;
+    padding: 0 4px 0 6px;
+  }
+
+  .token-prefix {
+    font-size: 10px;
+  }
+
+  #token-id-input {
+    font-size: 11px;
+    padding: 0 2px;
+  }
+
+  .btn-token-go {
+    font-size: 12px;
+    padding: 0 2px;
+  }
+
+  .action-btn {
+    height: 34px;
+    font-size: 9.5px;
+    padding: 0 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .dropdown-chevron {
+    font-size: 7px;
+  }
+
+  /* Specs / Trait Architecture Panel */
+  .specs-panel {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .specs-header {
+    padding-bottom: 8px;
+  }
+
+  .specs-title {
+    font-size: 10px;
+  }
+
+  .status-tag {
+    font-size: 8px;
+    padding: 1px 4px;
+  }
+
+  .layer-item {
+    padding: 7px 0;
+    font-size: 10px;
+  }
+
+  .layer-num {
+    width: 22px;
+    font-size: 9px;
+  }
+
+  .layer-name {
+    width: 68px;
+    font-size: 9.5px;
+  }
+
+  .layer-val {
+    font-size: 9.5px;
+  }
+
+  .specs-bottom-bar {
+    height: 34px;
+    gap: 6px;
+  }
+
+  .specs-action-btn {
+    height: 34px;
+    font-size: 9.5px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Curated Editions Gallery */
+  .gallery-block {
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .gallery-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+
+  .gallery-title-wrap {
+    flex: 1;
+  }
+
+  .gallery-tag {
+    font-size: 8px;
+  }
+
+  .gallery-heading {
+    font-size: 12px;
+  }
+
+  .gallery-count {
+    font-size: 9px;
+  }
+
+  .gallery-search-wrap {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .gallery-search-box {
+    padding: 5px 8px;
+    gap: 6px;
+  }
+
+  #gallery-trait-search {
+    font-size: 10.5px;
+  }
+
+  #gallery-trait-search::placeholder {
+    font-size: 10px;
+  }
+
+  /* Responsive Grid Cards */
+  .editions-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .gallery-card {
+    padding: 5px;
+    gap: 4px;
+  }
+
+  .gallery-title {
+    font-size: 8.5px;
+  }
+
+  .gallery-meta {
+    font-size: 7.5px;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 14px 0 10px 0;
+    font-size: 9px;
+    gap: 8px;
+  }
+
+  .tool-by {
+    font-size: 9px;
+  }
+
+  .footer-x-link {
+    padding: 3px 6px;
+    font-size: 9px;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .editions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
 }

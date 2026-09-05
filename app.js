@@ -737,6 +737,11 @@ function updateTraitBadgesAndInspector(tokenId, traits) {
     document.getElementById('meta-artifact').textContent = traits.artifact;
   }
   document.getElementById('meta-crown').textContent = traits.crown;
+  const openseaLink = document.getElementById('btn-opensea');
+  if (openseaLink) {
+    openseaLink.href = `https://opensea.io/assets/ethereum/0x387c41b0b2f1128de44db1bcf8baad085f26392c/${tokenId}`;
+    openseaLink.title = `View Argonaut #${tokenId} on OpenSea`;
+  }
 }
 
 // Render Opepen to UI
@@ -796,16 +801,47 @@ async function loadToken(tokenId) {
   if (btnSpinner) btnSpinner.style.display = 'none';
 }
 
-// 15 Curated Editions & Dynamic Trait Search State
+// 15 Curated Editions & Dynamic Trait Search State (Strictly 2 Cloak, 13 Other Traits)
 let defaultRandomEditions = [];
 
 function getRandomGalleryEditions(count = 15) {
-  const chosen = new Set();
-  while (chosen.size < count) {
+  const cloakTokens = [];
+  const otherTokens = [];
+  const cloakTarget = 2;
+  const otherTarget = Math.max(0, count - cloakTarget);
+
+  // Pick exactly 2 unique tokens with a Cloak trait
+  let cloakAttempts = 0;
+  while (cloakTokens.length < cloakTarget && cloakAttempts < 2000) {
+    cloakAttempts++;
     const tid = Math.floor(Math.random() * 9999) + 1;
-    chosen.add(tid);
+    if (cloakTokens.includes(tid)) continue;
+    const meta = getOfflineTokenTraits(tid);
+    if (meta && meta.indices && meta.indices.cloak_idx > 0) {
+      cloakTokens.push(tid);
+    }
   }
-  return Array.from(chosen).map(id => ({
+
+  // Pick exactly 13 unique tokens with other traits (Cloak == None)
+  let otherAttempts = 0;
+  while (otherTokens.length < otherTarget && otherAttempts < 2000) {
+    otherAttempts++;
+    const tid = Math.floor(Math.random() * 9999) + 1;
+    if (cloakTokens.includes(tid) || otherTokens.includes(tid)) continue;
+    const meta = getOfflineTokenTraits(tid);
+    if (meta && meta.indices && meta.indices.cloak_idx === 0) {
+      otherTokens.push(tid);
+    }
+  }
+
+  // Combine and shuffle so the 2 cloaks are dispersed naturally
+  const combined = [...cloakTokens, ...otherTokens];
+  for (let i = combined.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [combined[i], combined[j]] = [combined[j], combined[i]];
+  }
+
+  return combined.map(id => ({
     id,
     name: `ARGOPEPEN #${id.toString().padStart(4, '0')}`
   }));
@@ -1242,43 +1278,6 @@ function setupEventListeners() {
       btnClearSearch.style.display = 'none';
       renderGallery(defaultRandomEditions);
       searchInput.focus();
-    });
-  }
-
-  // Copy Traits button in Trait Architecture panel
-  const btnCopyTraits = document.getElementById('btn-copy-traits');
-  if (btnCopyTraits) {
-    btnCopyTraits.addEventListener('click', () => {
-      const tid = currentTokenId || 20;
-      const tidStr = tid.toString().padStart(4, '0');
-      const palette = document.getElementById('meta-palette')?.textContent || '—';
-      const bones = document.getElementById('meta-bones')?.textContent || '—';
-      const cloak = document.getElementById('meta-cloak')?.textContent || '—';
-      const relic = document.getElementById('meta-relic')?.textContent || '—';
-      const sight = document.getElementById('meta-sight')?.textContent || '—';
-      const artifact = document.getElementById('meta-artifact')?.textContent || '—';
-      const crown = document.getElementById('meta-crown')?.textContent || '—';
-
-      const text = [
-        `ARGOPEPEN #${tidStr}`,
-        `00 PALETTE: ${palette}`,
-        `01 BONES: ${bones}`,
-        `02 CLOAK: ${cloak}`,
-        `03 RELIC: ${relic}`,
-        `04 SIGHT: ${sight}`,
-        `05 ARTIFACT: ${artifact}`,
-        `06 CROWN: ${crown}`
-      ].join('\n');
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-          showToast(`Copied traits for #${tidStr}`);
-        }).catch(() => {
-          showToast(`Copied traits for #${tidStr}`);
-        });
-      } else {
-        showToast(`Copied traits for #${tidStr}`);
-      }
     });
   }
 }

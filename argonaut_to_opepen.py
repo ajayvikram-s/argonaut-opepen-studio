@@ -127,7 +127,12 @@ def decode_artifact_layers(artifact_name):
         smoke, _ = decode_blob(78)
         device, _ = decode_blob(79)
     elif 'pipe' in name_low or 'woodpipe' in name_low:
-        device, _ = decode_blob(64)
+        raw_pipe, _ = decode_blob(64)
+        for k, (c, a) in raw_pipe.items():
+            if a < 255:
+                smoke[k] = (c, a)
+            else:
+                device[k] = (c, a)
     return device, smoke
 
 # Canonical Tapered Silhouette Cells
@@ -254,10 +259,9 @@ def generate_opepen_for_token(token_id, output_dir=None):
     for pt, (c, a) in artifact_smoke_px.items():
         composite_head[pt] = (c, a)
 
-    # Layer 4: Sight (Eyes)
+    # Layer 4: Sight (Eyes) - Fully visible uncropped as in original Argonaut
     for pt, (c, a) in sight_px.items():
-        if 5 <= pt[1] <= 18:
-            composite_head[pt] = (c, a)
+        composite_head[pt] = (c, a)
 
     # Layer 2: Cloak (Hoodie)
     for pt, (c, a) in cloak_px.items():
@@ -269,7 +273,7 @@ def generate_opepen_for_token(token_id, output_dir=None):
         if 5 <= pt[1] <= 18:
             composite_head[pt] = (c, a)
 
-    # Layer 5 Device: Artifact / Mouth Device
+    # Layer 5 Device: Artifact / Mouth Device - Fully visible
     for pt, (c, a) in artifact_device_px.items():
         composite_head[pt] = (c, a)
 
@@ -284,20 +288,25 @@ def generate_opepen_for_token(token_id, output_dir=None):
         gx_R = pt_x + 22
         gy_R = pt_y + 9
         is_artifact_pixel = (pt_x, pt_y) in artifact_device_px or (pt_x, pt_y) in artifact_smoke_px
-        if is_artifact_pixel:
+        is_sight_pixel = (pt_x, pt_y) in sight_px
+        if is_artifact_pixel or is_sight_pixel:
             if 0 <= gx_R < 56 and 0 <= gy_R < 56:
-                head_right_cells[(gx_R, gy_R)] = (c, a)
+                head_right_cells[(gx_R, gy_R)] = (c, a, is_artifact_pixel or is_sight_pixel)
         else:
             if 28 <= gx_R <= 41 and 14 <= gy_R <= 27:
-                head_right_cells[(gx_R, gy_R)] = (c, a)
+                head_right_cells[(gx_R, gy_R)] = (c, a, False)
 
     # 5. Left Head construction (Anti-diagonal reflection)
     head_left_cells = {}
-    for (gx_R, gy_R), (c, a) in head_right_cells.items():
+    for (gx_R, gy_R), (c, a, is_exempt) in head_right_cells.items():
         gx_L = 41 - gy_R
         gy_L = 55 - gx_R
-        if 0 <= gx_L < 56 and 0 <= gy_L < 56:
-            head_left_cells[(gx_L, gy_L)] = (c, a)
+        if is_exempt:
+            if 0 <= gx_L < 56 and 0 <= gy_L < 56:
+                head_left_cells[(gx_L, gy_L)] = (c, a)
+        else:
+            if 14 <= gx_L <= 41 and 14 <= gy_L <= 55:
+                head_left_cells[(gx_L, gy_L)] = (c, a)
 
     # Convert cells to paths
     head_right_paths = []

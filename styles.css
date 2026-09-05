@@ -208,22 +208,22 @@ body {
 .canvas-frame {
   position: relative;
   width: 100%;
-  max-width: min(520px, 94vw);
+  max-width: min(760px, 98vw);
   margin: 0 auto;
   background: transparent;
   border: none;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 24px;
   align-items: center;
   justify-content: center;
-  padding: 4px 0;
+  padding: 8px 0;
 }
 
 .svg-stage {
   width: 100%;
   aspect-ratio: 1 / 1;
-  max-width: min(240px, 34vh);
+  max-width: min(350px, 45vh);
   margin: auto;
   display: flex;
   align-items: center;
@@ -243,10 +243,10 @@ body {
 @media (max-width: 520px) {
   .canvas-frame {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
   }
   .svg-stage {
-    max-width: 260px;
+    max-width: 320px;
   }
 }
 

@@ -776,7 +776,6 @@ async function loadToken(tokenId) {
   document.getElementById('opepen-canvas-container').innerHTML = svg;
 
   updateTraitBadgesAndInspector(tokenId, traits);
-  showToast(`Synthesized Argonaut Opepen #${tokenId}`);
 
   if (btnSpinner) btnSpinner.style.display = 'none';
 }

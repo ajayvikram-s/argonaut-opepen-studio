@@ -740,7 +740,7 @@ function updateTraitBadgesAndInspector(tokenId, traits) {
   const openseaLink = document.getElementById('btn-opensea');
   if (openseaLink) {
     openseaLink.href = `https://opensea.io/item/ethereum/0x387c41b0b2f1128de44db1bcf8baad085f26392c/${tokenId}`;
-    openseaLink.title = `Search Argonaut #${tokenId} on OpenSea`;
+    openseaLink.title = `View Argonaut #${tokenId} on OpenSea`;
   }
 }
 

@@ -501,9 +501,6 @@ function synthesizeOpepen(tokenId, meta) {
 
   // Build Right Head
   const headRightCells = {};
-  const maxGy = cloakIdx > 0 ? 32 : 27;
-  const minGx = cloakIdx > 0 ? 14 : 28;
-  const minGy = cloakIdx > 0 ? 9 : 14;
 
   Object.keys(compositeHead).forEach(k => {
     const [pt_x, pt_y] = k.split(',').map(Number);
@@ -521,7 +518,8 @@ function synthesizeOpepen(tokenId, meta) {
         });
       }
     } else {
-      if (gx_R >= minGx && gx_R <= 41 && gy_R >= minGy && gy_R <= maxGy) {
+      const minGy = crownDecoded.pixels[k] ? 0 : 14;
+      if (gx_R >= 28 && gx_R <= 41 && gy_R >= minGy && gy_R <= 27) {
         headRightCells[`${gx_R},${gy_R}`] = compositeHead[k];
       }
     }
@@ -539,7 +537,7 @@ function synthesizeOpepen(tokenId, meta) {
         headLeftCells[`${gx_L},${gy_L}`] = cell;
       }
     } else {
-      if (gx_L >= 14 && gx_L <= 41 && gy_L >= 14 && gy_L <= 55) {
+      if (gx_L >= 14 && gx_L <= 27 && gy_L >= 14 && gy_L <= 27) {
         headLeftCells[`${gx_L},${gy_L}`] = cell;
       }
     }
@@ -645,8 +643,6 @@ function synthesizeOpepen(tokenId, meta) {
     shuffledPalette.push(...tmp);
   }
 
-  const cloakBodyMap = (window.CLOAK_BODY_MAPS && window.CLOAK_BODY_MAPS[cloakIdx]) || null;
-
   // Convert head cells to paths
   const headPaths = [];
   Object.keys(headCombined).forEach(k => {
@@ -662,10 +658,7 @@ function synthesizeOpepen(tokenId, meta) {
   let cIdx = 0;
   CANON_BODY_TARGET.forEach(([gx, gy]) => {
     if (headCombined[`${gx},${gy}`]) return; // Avoid duplicate overlapping pixels
-    const coordKey = `${gx},${gy}`;
-    const c = (cloakIdx > 0 && cloakBodyMap && cloakBodyMap[coordKey])
-      ? cloakBodyMap[coordKey]
-      : (cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++]);
+    const c = cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++];
     const x = gx * 10;
     const y = gy * 10;
     bodyPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${c}"/>`);
@@ -674,10 +667,7 @@ function synthesizeOpepen(tokenId, meta) {
   const basePaths = [];
   CANON_BASE_TARGET.forEach(([gx, gy]) => {
     if (headCombined[`${gx},${gy}`]) return; // Avoid duplicate overlapping pixels
-    const coordKey = `${gx},${gy}`;
-    const c = (cloakIdx > 0 && cloakBodyMap && cloakBodyMap[coordKey])
-      ? cloakBodyMap[coordKey]
-      : (cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++]);
+    const c = cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++];
     const x = gx * 10;
     const y = gy * 10;
     basePaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${c}"/>`);

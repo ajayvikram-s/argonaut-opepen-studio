@@ -192,6 +192,82 @@ def fetch_token_metadata(token_id):
             continue
     return None
 
+CLOAK_PALETTES = {
+    1: {"name": "Servant", "SPEC_HI": "#FFFFFF", "SOFT_HI": "#E6E6E6", "ROSE_HI": "#DDDDDD", "MID_TONE": "#D6D3D1", "BERRY_MID": "#C8C4C0", "ROSE_MID": "#B8B4B0", "DEEP_ROSE": "#A9A9A9", "PLUM_SHD": "#979797"},
+    2: {"name": "Death", "SPEC_HI": "#2E2F38", "SOFT_HI": "#24252C", "ROSE_HI": "#1E1F24", "MID_TONE": "#1A1B20", "BERRY_MID": "#17171B", "ROSE_MID": "#131316", "DEEP_ROSE": "#0D0D10", "PLUM_SHD": "#09090B"},
+    3: {"name": "Royalty", "SPEC_HI": "#5A3686", "SOFT_HI": "#4A2C6E", "ROSE_HI": "#432864", "MID_TONE": "#3C2358", "BERRY_MID": "#351E4E", "ROSE_MID": "#2D1842", "DEEP_ROSE": "#29173C", "PLUM_SHD": "#241334"},
+    4: {"name": "Ivory", "SPEC_HI": "#FFF9EB", "SOFT_HI": "#E8E2D2", "ROSE_HI": "#DDD7C7", "MID_TONE": "#D1CBBB", "BERRY_MID": "#C4BEAE", "ROSE_MID": "#B8B2A2", "DEEP_ROSE": "#B2AC9D", "PLUM_SHD": "#A39D8E"},
+    5: {"name": "Clergy", "SPEC_HI": "#A7344E", "SOFT_HI": "#992F47", "ROSE_HI": "#9D3049", "MID_TONE": "#8C2A40", "BERRY_MID": "#8F2B42", "ROSE_MID": "#88283E", "DEEP_ROSE": "#7E2439", "PLUM_SHD": "#691C2E"}
+}
+
+def get_volumetric_cloth_color(gx, gy, c_idx):
+    pal = CLOAK_PALETTES.get(c_idx, CLOAK_PALETTES[5])
+    # Option 3: Dual-Wing Drapery Sweep Accents
+    if (gy in (29, 30)) and (gx in (17, 18)): return pal["SOFT_HI"]
+    if (gy in (32, 33)) and (gx in (18, 19)): return pal["SOFT_HI"]
+    if (gy in (34, 35)) and (gx in (19, 20)): return pal["SOFT_HI"]
+    if (gy in (32, 33)) and (gx in (27, 28)): return pal["ROSE_MID"]
+    if (gy in (34, 35)) and (gx in (26, 27)): return pal["ROSE_MID"]
+
+    dist = abs(gx - 13.5)
+    if 28 <= gy <= 41:
+        if gy <= 30:
+            if dist > 9.5: return pal["PLUM_SHD"]
+            if dist > 7.0: return pal["SPEC_HI"]
+            if dist > 4.5: return pal["SOFT_HI"]
+            if dist > 1.5: return pal["MID_TONE"]
+            return pal["ROSE_MID"]
+        elif gy <= 33:
+            if dist > 11.5: return pal["PLUM_SHD"]
+            if dist > 9.5: return pal["DEEP_ROSE"]
+            if dist > 8.0: return pal["ROSE_MID"]
+            if dist > 5.5: return pal["SOFT_HI"]
+            if dist > 2.0: return pal["MID_TONE"]
+            return pal["BERRY_MID"]
+        elif gy <= 38:
+            if dist > 11.5: return pal["PLUM_SHD"]
+            if dist > 9.0: return pal["DEEP_ROSE"]
+            if dist > 7.5: return pal["ROSE_MID"]
+            if dist > 4.5:
+                if gy in (36, 37) and 5.5 <= dist <= 7.0: return pal["SOFT_HI"]
+                return pal["MID_TONE"]
+            if dist > 1.5: return pal["MID_TONE"]
+            return pal["BERRY_MID"]
+        elif gy == 39:
+            if dist > 10.5: return pal["DEEP_ROSE"]
+            if dist > 8.5: return pal["ROSE_MID"]
+            if dist > 1.5: return pal["MID_TONE"]
+            return pal["BERRY_MID"]
+        elif gy == 40:
+            if dist > 9.5: return pal["PLUM_SHD"]
+            if dist > 7.5: return pal["DEEP_ROSE"]
+            if dist > 5.5: return pal["ROSE_MID"]
+            return pal["MID_TONE"]
+        elif gy == 41:
+            if dist > 6.0: return pal["PLUM_SHD"]
+            if dist > 3.0: return pal["DEEP_ROSE"]
+            return pal["ROSE_MID"]
+    elif 49 <= gy <= 55:
+        if gy == 49:
+            if dist > 7.5: return pal["DEEP_ROSE"]
+            if dist > 5.0: return pal["SOFT_HI"]
+            if dist > 1.5: return pal["MID_TONE"]
+            return pal["SOFT_HI"]
+        elif gy == 50:
+            if dist > 9.0: return pal["DEEP_ROSE"]
+            if dist > 6.5: return pal["SOFT_HI"]
+            return pal["MID_TONE"]
+        elif gy <= 54:
+            if dist > 11.0: return pal["PLUM_SHD"]
+            if dist > 9.0: return pal["DEEP_ROSE"]
+            if dist > 7.0: return pal["ROSE_MID"]
+            return pal["MID_TONE"]
+        elif gy == 55:
+            if dist > 8.0: return pal["PLUM_SHD"]
+            if dist > 4.0: return pal["DEEP_ROSE"]
+            return pal["ROSE_MID"]
+    return pal["MID_TONE"]
+
 def hex_to_rgb(hex_str):
     hex_str = hex_str.lstrip('#')
     if len(hex_str) == 3:
@@ -293,7 +369,8 @@ def generate_opepen_for_token(token_id, output_dir=None):
             if 0 <= gx_R < 56 and 0 <= gy_R < 56:
                 head_right_cells[(gx_R, gy_R)] = (c, a, is_artifact_pixel or is_sight_pixel)
         else:
-            if 28 <= gx_R <= 41 and 14 <= gy_R <= 27:
+            min_gy = 0 if (pt_x, pt_y) in crown_px else 14
+            if 28 <= gx_R <= 41 and min_gy <= gy_R <= 27:
                 head_right_cells[(gx_R, gy_R)] = (c, a, False)
 
     # 5. Left Head construction (Anti-diagonal reflection)
@@ -305,7 +382,7 @@ def generate_opepen_for_token(token_id, output_dir=None):
             if 0 <= gx_L < 56 and 0 <= gy_L < 56:
                 head_left_cells[(gx_L, gy_L)] = (c, a)
         else:
-            if 14 <= gx_L <= 41 and 14 <= gy_L <= 55:
+            if 14 <= gx_L <= 27 and 14 <= gy_L <= 27:
                 head_left_cells[(gx_L, gy_L)] = (c, a)
 
     # Convert cells to paths
@@ -338,7 +415,7 @@ def generate_opepen_for_token(token_id, output_dir=None):
     for gx, gy in CANON_BODY_TARGET:
         if (gx, gy) in head_right_cells or (gx, gy) in head_left_cells:
             continue
-        c = shuffled_palette[c_idx]
+        c = get_volumetric_cloth_color(gx, gy, cloak_idx) if cloak_idx > 0 else shuffled_palette[c_idx]
         c_idx += 1
         x = gx * 10
         y = gy * 10
@@ -349,7 +426,7 @@ def generate_opepen_for_token(token_id, output_dir=None):
     for gx, gy in CANON_BASE_TARGET:
         if (gx, gy) in head_right_cells or (gx, gy) in head_left_cells:
             continue
-        c = shuffled_palette[c_idx]
+        c = get_volumetric_cloth_color(gx, gy, cloak_idx) if cloak_idx > 0 else shuffled_palette[c_idx]
         c_idx += 1
         x = gx * 10
         y = gy * 10

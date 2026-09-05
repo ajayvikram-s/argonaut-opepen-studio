@@ -40,6 +40,22 @@ const TRAIT_LOOKUP = {
   ]
 };
 
+// Canonical Underhead sight blob map when Crown == Oarsman's Band (crown_idx 1) from contract RendererV2
+const CANONICAL_UNDERHEAD_MAP = {
+  1: 77, // Shades
+  2: 67, // Glasses
+  4: 76, // Eye Patch
+  5: 66, // 3D Glasses
+  6: 68, // Designer
+  7: 72, // Gucci
+  8: 73, // Louis Vuitton
+  9: 74, // Prada
+  10: 75, // Versace
+  11: 71, // Dior
+  12: 69, // Balenciaga
+  13: 70  // Chanel
+};
+
 // Offline vape flavor bitmap evaluator matching contract RendererV2.isDragonsBreath(tokenId)
 let VAPE_BITMAP_BYTES = null;
 function isDragonsBreath(tokenId) {
@@ -369,7 +385,7 @@ function generateOriginalTokenSVG(meta, tokenId) {
     } else {
       blobId = getBlobId(layer, idx);
       if (layer === LAYER_EYES && blobId !== 0xFF && traits[LAYER_HEAD] === (window.ARGONAUTS_DATA?.headbandHeadIndex ?? 1)) {
-        const uh = (window.UNDERHEAD_BLOB_MAP && window.UNDERHEAD_BLOB_MAP[idx]) || 0;
+        const uh = CANONICAL_UNDERHEAD_MAP[idx] || (window.UNDERHEAD_BLOB_MAP && window.UNDERHEAD_BLOB_MAP[idx]) || 0;
         if (uh !== 0) blobId = uh;
       }
     }
@@ -443,7 +459,7 @@ function synthesizeOpepen(tokenId, meta) {
 
   let sightBlobId = sightIdx > 0 ? getBlobId(4, sightIdx) : 0xFF;
   if (crownIdx === 1 && sightIdx > 0) {
-    const uh = (window.UNDERHEAD_BLOB_MAP && window.UNDERHEAD_BLOB_MAP[sightIdx]) || 0;
+    const uh = CANONICAL_UNDERHEAD_MAP[sightIdx] || (window.UNDERHEAD_BLOB_MAP && window.UNDERHEAD_BLOB_MAP[sightIdx]) || 0;
     if (uh) sightBlobId = uh;
   }
   const sightDecoded = sightBlobId !== 0xFF ? decodeBlob(sightBlobId) : { pixels: {} };

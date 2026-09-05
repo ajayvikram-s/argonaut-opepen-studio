@@ -795,18 +795,72 @@ function getRandomGalleryEditions(count = 15) {
   }));
 }
 
+function formatCardMeta(traits, query = '') {
+  const parts = [];
+  const qTerms = query ? query.trim().toLowerCase().split(/\s+/).filter(Boolean) : [];
+
+  const allTraitEntries = [
+    { type: 'Bones', val: traits.bones },
+    { type: 'Cloak', val: traits.cloak },
+    { type: 'Crown', val: traits.crown },
+    { type: 'Artifact', val: traits.artifact },
+    { type: 'Sight', val: traits.sight },
+    { type: 'Palette', val: traits.palette }
+  ].filter(t => t.val && t.val !== 'None');
+
+  // If there are search terms, prioritize the trait(s) that matched the query
+  if (qTerms.length > 0) {
+    for (const t of allTraitEntries) {
+      const lower = t.val.toLowerCase();
+      const norm = lower.replace(/s$/, '');
+      if (qTerms.some(term => {
+        const tNorm = term.replace(/s$/, '');
+        return lower.includes(term) || (tNorm && norm.includes(tNorm));
+      })) {
+        if (!parts.includes(t.val)) parts.push(t.val);
+      }
+    }
+  }
+
+  // Fill in secondary info (Bones, Cloak, Artifact, Sight, Crown, Palette) up to 2 items
+  for (const t of allTraitEntries) {
+    if (parts.length >= 2) break;
+    if (!parts.includes(t.val)) parts.push(t.val);
+  }
+
+  return parts.slice(0, 2).join(' • ');
+}
+
 function searchTokensByTrait(query, limit = 15) {
   if (!query || !query.trim()) return [];
   const qTerms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const results = [];
+  const activeTypes = new Set(['Bones', 'Cloak', 'Artifact', 'Sight', 'Crown', 'Palette']);
 
   for (let tid = 1; tid <= 9999; tid++) {
     const meta = getOfflineTokenTraits(tid);
     if (!meta) continue;
-    const traitStrings = meta.attributes.map(a => a.value.toLowerCase());
-    traitStrings.push(tid.toString(), '#' + tid.toString(), '#' + tid.toString().padStart(4, '0'));
 
-    const allMatch = qTerms.every(term => traitStrings.some(t => t.includes(term)));
+    const searchable = [];
+    searchable.push(tid.toString(), '#' + tid.toString(), '#' + tid.toString().padStart(4, '0'));
+
+    meta.attributes.forEach(a => {
+      if (activeTypes.has(a.trait_type) && a.value !== 'None') {
+        const valLower = a.value.toLowerCase();
+        const typeLower = a.trait_type.toLowerCase();
+        searchable.push(valLower);
+        searchable.push(typeLower);
+        searchable.push(valLower + ' ' + typeLower);
+        if (typeLower === 'bones') searchable.push(valLower + ' bone');
+        if (typeLower === 'cloak') searchable.push(valLower + ' cloak');
+      }
+    });
+
+    const allMatch = qTerms.every(term => {
+      const termNorm = term.replace(/s$/, '');
+      return searchable.some(s => s.includes(term) || (termNorm && s.includes(termNorm)));
+    });
+
     if (allMatch) {
       results.push({
         id: tid,
@@ -831,7 +885,7 @@ function renderGallery(items, query = '') {
       <div class="gallery-empty-state">
         <span class="empty-icon">🔍</span>
         <span class="empty-title">NO MATCHING ARGOPEPEN FOUND</span>
-        <span class="empty-desc">No Argopepen found with trait matching "<code>${escaped}</code>". Try searching for traits like <em>Clergy</em>, <em>Woodpipe</em>, <em>Gold</em>, <em>Void</em>, <em>Alien</em>, or <em>Death</em>.</span>
+        <span class="empty-desc">No Argopepen found with trait matching "<code>${escaped}</code>". Try searching for traits like <em>Gold</em>, <em>Clergy</em>, <em>Alien</em>, <em>Woodpipe</em>, <em>3D Glasses</em>, or <em>Death</em>.</span>
       </div>
     `;
     return;
@@ -848,12 +902,7 @@ function renderGallery(items, query = '') {
   container.innerHTML = items.map(item => {
     const meta = item.meta || getOfflineTokenTraits(item.id);
     const { svg, traits } = synthesizeOpepen(item.id, meta);
-    let metaText = `${traits.bones} • ${traits.palette}`;
-    if (traits.cloak && traits.cloak !== 'None') {
-      metaText = `${traits.bones} • ${traits.cloak}`;
-    } else if (traits.artifact && traits.artifact !== 'None') {
-      metaText = `${traits.bones} • ${traits.artifact}`;
-    }
+    const metaText = formatCardMeta(traits, query);
     return `
       <div class="gallery-card" data-id="${item.id}" onclick="loadGalleryToken(${item.id})">
         <div class="gallery-thumb">${svg}</div>

@@ -742,8 +742,13 @@ async function loadToken(tokenId) {
     }
   });
 
-  // 1. Instantly retrieve 100% verified on-chain traits from offline table
+  // 1. Instantly retrieve 100% verified on-chain traits from authoritative offline table
   let meta = getOfflineTokenTraits(tokenId);
+  if (!meta) {
+    try {
+      meta = await fetchTokenMetadata(tokenId);
+    } catch (e) {}
+  }
   if (!meta) {
     meta = {
       name: `Argonaut #${tokenId.toString().padStart(4, '0')}`,
@@ -763,7 +768,7 @@ async function loadToken(tokenId) {
   const { svg, traits } = synthesizeOpepen(tokenId, meta);
   currentOpepenSVG = svg;
 
-  // Render both Original Argonaut and Argonaut Opepen side by side immediately to DOM
+  // Render finalized Original Argonaut and Argonaut Opepen side by side with zero flicker or pixel changes
   currentOriginalSVG = generateOriginalTokenSVG(meta, tokenId);
   if (document.getElementById('orig-svg-wrapper')) {
     document.getElementById('orig-svg-wrapper').innerHTML = currentOriginalSVG;
@@ -773,26 +778,7 @@ async function loadToken(tokenId) {
   updateTraitBadgesAndInspector(tokenId, traits);
   showToast(`Synthesized Argonaut Opepen #${tokenId}`);
 
-  // Background fetch to update with live contract SVG if available
-  fetchTokenMetadata(tokenId).then(liveMeta => {
-    if (liveMeta) {
-      if (meta && meta.indices) {
-        liveMeta.indices = meta.indices;
-      }
-      currentMetadata = liveMeta;
-      const liveSvg = generateOriginalTokenSVG(liveMeta, tokenId);
-      if (liveSvg && document.getElementById('orig-svg-wrapper')) {
-        currentOriginalSVG = liveSvg;
-        document.getElementById('orig-svg-wrapper').innerHTML = liveSvg;
-      }
-      const { svg: updatedSvg, traits: updatedTraits } = synthesizeOpepen(tokenId, liveMeta);
-      currentOpepenSVG = updatedSvg;
-      document.getElementById('opepen-canvas-container').innerHTML = updatedSvg;
-      updateTraitBadgesAndInspector(tokenId, updatedTraits);
-    }
-  }).catch(() => {}).finally(() => {
-    if (btnSpinner) btnSpinner.style.display = 'none';
-  });
+  if (btnSpinner) btnSpinner.style.display = 'none';
 }
 
 // 15 Curated Editions Catalog (Real living Argonauts with updated smart contract traits)

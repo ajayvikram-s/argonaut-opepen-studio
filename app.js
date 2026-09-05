@@ -780,42 +780,103 @@ async function loadToken(tokenId) {
   if (btnSpinner) btnSpinner.style.display = 'none';
 }
 
-// 15 Curated Editions Catalog (Real living Argonauts with updated smart contract traits)
-const CURATED_EDITIONS = [
-  { id: 1, name: "ARGOPEPEN #0001" },
-  { id: 2, name: "ARGOPEPEN #0002" },
-  { id: 4, name: "ARGOPEPEN #0004" },
-  { id: 8, name: "ARGOPEPEN #0008" },
-  { id: 18, name: "ARGOPEPEN #0018" },
-  { id: 20, name: "ARGOPEPEN #0020" },
-  { id: 28, name: "ARGOPEPEN #0028" },
-  { id: 42, name: "ARGOPEPEN #0042" },
-  { id: 107, name: "ARGOPEPEN #0107" },
-  { id: 125, name: "ARGOPEPEN #0125" },
-  { id: 777, name: "ARGOPEPEN #0777" },
-  { id: 1337, name: "ARGOPEPEN #1337" },
-  { id: 1458, name: "ARGOPEPEN #1458" },
-  { id: 6969, name: "ARGOPEPEN #6969" },
-  { id: 9999, name: "ARGOPEPEN #9999" }
-];
+// 15 Curated Editions & Dynamic Trait Search State
+let defaultRandomEditions = [];
 
-function populateGallery() {
+function getRandomGalleryEditions(count = 15) {
+  const chosen = new Set();
+  while (chosen.size < count) {
+    const tid = Math.floor(Math.random() * 9999) + 1;
+    chosen.add(tid);
+  }
+  return Array.from(chosen).map(id => ({
+    id,
+    name: `ARGOPEPEN #${id.toString().padStart(4, '0')}`
+  }));
+}
+
+function searchTokensByTrait(query, limit = 15) {
+  if (!query || !query.trim()) return [];
+  const qTerms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const results = [];
+
+  for (let tid = 1; tid <= 9999; tid++) {
+    const meta = getOfflineTokenTraits(tid);
+    if (!meta) continue;
+    const traitStrings = meta.attributes.map(a => a.value.toLowerCase());
+    traitStrings.push(tid.toString(), '#' + tid.toString(), '#' + tid.toString().padStart(4, '0'));
+
+    const allMatch = qTerms.every(term => traitStrings.some(t => t.includes(term)));
+    if (allMatch) {
+      results.push({
+        id: tid,
+        name: `ARGOPEPEN #${tid.toString().padStart(4, '0')}`,
+        meta
+      });
+      if (results.length >= limit) break;
+    }
+  }
+  return results;
+}
+
+function renderGallery(items, query = '') {
   const container = document.getElementById('gallery-grid');
+  const countBadge = document.getElementById('gallery-count-badge');
   if (!container) return;
 
-  container.innerHTML = CURATED_EDITIONS.map(item => {
-    const meta = getOfflineTokenTraits(item.id);
+  if (query && items.length === 0) {
+    if (countBadge) countBadge.textContent = '0 RESULTS';
+    const escaped = query.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    container.innerHTML = `
+      <div class="gallery-empty-state">
+        <span class="empty-icon">🔍</span>
+        <span class="empty-title">NO MATCHING ARGOPEPEN FOUND</span>
+        <span class="empty-desc">No Argopepen found with trait matching "<code>${escaped}</code>". Try searching for traits like <em>Clergy</em>, <em>Woodpipe</em>, <em>Gold</em>, <em>Void</em>, <em>Alien</em>, or <em>Death</em>.</span>
+      </div>
+    `;
+    return;
+  }
+
+  if (countBadge) {
+    if (query) {
+      countBadge.textContent = `${items.length} RESULTS`;
+    } else {
+      countBadge.textContent = '15 EDITIONS';
+    }
+  }
+
+  container.innerHTML = items.map(item => {
+    const meta = item.meta || getOfflineTokenTraits(item.id);
     const { svg, traits } = synthesizeOpepen(item.id, meta);
+    let metaText = `${traits.bones} • ${traits.palette}`;
+    if (traits.cloak && traits.cloak !== 'None') {
+      metaText = `${traits.bones} • ${traits.cloak}`;
+    } else if (traits.artifact && traits.artifact !== 'None') {
+      metaText = `${traits.bones} • ${traits.artifact}`;
+    }
     return `
-      <div class="gallery-card" data-id="${item.id}" onclick="loadToken(${item.id})">
+      <div class="gallery-card" data-id="${item.id}" onclick="loadGalleryToken(${item.id})">
         <div class="gallery-thumb">${svg}</div>
         <div class="gallery-info">
           <span class="gallery-title">${item.name}</span>
-          <span class="gallery-meta">${traits.bones} • ${traits.palette}</span>
+          <span class="gallery-meta">${metaText}</span>
         </div>
       </div>
     `;
   }).join('');
+}
+
+window.loadGalleryToken = function(tokenId) {
+  loadToken(tokenId);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+window.loadToken = loadToken;
+
+function populateGallery() {
+  if (!defaultRandomEditions || defaultRandomEditions.length === 0) {
+    defaultRandomEditions = getRandomGalleryEditions(15);
+  }
+  renderGallery(defaultRandomEditions);
 }
 
 // Toast Notification
@@ -1018,6 +1079,47 @@ function setupEventListeners() {
       if (btnDownloadMain) btnDownloadMain.setAttribute('aria-expanded', 'false');
     }
   });
+
+  // Curated Editions Trait Search
+  const searchInput = document.getElementById('gallery-trait-search');
+  const btnClearSearch = document.getElementById('btn-clear-search');
+
+  if (searchInput) {
+    let searchDebounce = null;
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim();
+      if (btnClearSearch) {
+        btnClearSearch.style.display = q ? 'inline-flex' : 'none';
+      }
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        if (!q) {
+          renderGallery(defaultRandomEditions);
+        } else {
+          const matches = searchTokensByTrait(q, 15);
+          renderGallery(matches, q);
+        }
+      }, 70);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        if (btnClearSearch) btnClearSearch.style.display = 'none';
+        renderGallery(defaultRandomEditions);
+        searchInput.blur();
+      }
+    });
+  }
+
+  if (btnClearSearch && searchInput) {
+    btnClearSearch.addEventListener('click', () => {
+      searchInput.value = '';
+      btnClearSearch.style.display = 'none';
+      renderGallery(defaultRandomEditions);
+      searchInput.focus();
+    });
+  }
 }
 
 // App Initialization

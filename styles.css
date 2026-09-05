@@ -628,7 +628,9 @@ body {
 .gallery-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border-hairline);
 }
@@ -654,10 +656,112 @@ body {
   color: var(--text-primary);
 }
 
+.gallery-search-wrap {
+  flex: 1;
+  max-width: 440px;
+  min-width: 240px;
+}
+
+.gallery-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-xs);
+  padding: 6px 12px;
+  transition: all var(--transition-fast);
+}
+
+.gallery-search-box:focus-within {
+  border-color: var(--border-focus);
+  background: var(--bg-pitch);
+}
+
+.gallery-search-icon {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+#gallery-trait-search {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+#gallery-trait-search::placeholder {
+  color: var(--text-tertiary);
+  font-family: var(--font-body);
+  font-size: 11px;
+}
+
+.btn-clear-search {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0 4px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast);
+}
+
+.btn-clear-search:hover {
+  color: var(--text-primary);
+}
+
 .gallery-count {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-tertiary);
+}
+
+.gallery-empty-state {
+  grid-column: 1 / -1;
+  padding: 40px 20px;
+  text-align: center;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-hairline);
+  border-radius: var(--radius-xs);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.empty-icon {
+  font-size: 20px;
+  color: var(--text-tertiary);
+}
+
+.empty-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.06em;
+}
+
+.empty-desc {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.empty-desc code {
+  font-family: var(--font-mono);
+  background: var(--bg-surface-subtle);
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--border-hairline);
+  color: var(--text-primary);
 }
 
 .editions-grid {

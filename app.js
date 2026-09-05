@@ -801,7 +801,7 @@ async function loadToken(tokenId) {
   if (btnSpinner) btnSpinner.style.display = 'none';
 }
 
-// 15 Curated Editions State (At least 1 from all 9 Bones traits, strictly 2 Cloaks & 13 Non-Cloaks)
+// 20 Curated Editions State (At least 1 from all 9 Bones traits, strictly 2 Cloaks & 18 Non-Cloaks)
 let defaultRandomEditions = [];
 let CURATED_BONES_CACHE = null;
 
@@ -830,11 +830,11 @@ function getCuratedBonesCache() {
   return CURATED_BONES_CACHE;
 }
 
-function getRandomGalleryEditions(count = 15) {
+function getRandomGalleryEditions(count = 20) {
   const { byBone, allBoneNames } = getCuratedBonesCache();
   const chosen = new Set();
 
-  // Exactly 2 tokens out of the 15 will have cloaks
+  // Exactly 2 tokens out of the 20 will have cloaks
   // Pick 2 distinct bone types from those with cloak variations
   const bonesWithCloaks = ['Alien', 'Radioactive', 'Gold', 'Petrified', 'Floral', 'Silver', 'Prehistoric', 'Bone'];
   const shuffledCloakBones = [...bonesWithCloaks].sort(() => Math.random() - 0.5);
@@ -855,7 +855,7 @@ function getRandomGalleryEditions(count = 15) {
     }
   }
 
-  // 2. Fill remaining slots up to count (15) with NON-CLOAK tokens across all bones
+  // 2. Fill remaining slots up to count (20) with NON-CLOAK tokens across all bones
   const nonCloakPool = [];
   for (const b of allBoneNames) {
     nonCloakPool.push(...byBone[b].nonCloak);
@@ -916,7 +916,7 @@ function formatCardMeta(traits, query = '') {
   return parts.join(' • ');
 }
 
-function searchTokensByTrait(query, limit = 15) {
+function searchTokensByTrait(query, limit = 20) {
   if (!query || !query.trim()) return [];
   const cleanQ = query.trim().toLowerCase().replace(/[,;+&]/g, ' ');
   const qTerms = cleanQ.split(/\s+/).filter(Boolean);
@@ -1036,7 +1036,7 @@ function renderGallery(items, query = '') {
     if (query) {
       countBadge.textContent = `${items.length} RESULTS`;
     } else {
-      countBadge.textContent = '15 EDITIONS';
+      countBadge.textContent = '20 EDITIONS';
     }
   }
 
@@ -1064,7 +1064,7 @@ window.loadToken = loadToken;
 
 function populateGallery() {
   if (!defaultRandomEditions || defaultRandomEditions.length === 0) {
-    defaultRandomEditions = getRandomGalleryEditions(15);
+    defaultRandomEditions = getRandomGalleryEditions(20);
   }
   renderGallery(defaultRandomEditions);
 }

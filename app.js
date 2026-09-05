@@ -813,18 +813,20 @@ function getRandomGalleryEditions(count = 15) {
 
 function formatCardMeta(traits, query = '') {
   const parts = [];
-  const qTerms = query ? query.trim().toLowerCase().split(/\s+/).filter(Boolean) : [];
+  const cleanQ = query ? query.trim().toLowerCase().replace(/[,;+&]/g, ' ') : '';
+  const qTerms = cleanQ ? cleanQ.split(/\s+/).filter(Boolean) : [];
 
   const allTraitEntries = [
     { type: 'Bones', val: traits.bones },
     { type: 'Cloak', val: traits.cloak },
+    { type: 'Relic', val: traits.relic },
     { type: 'Crown', val: traits.crown },
     { type: 'Artifact', val: traits.artifact },
     { type: 'Sight', val: traits.sight },
     { type: 'Palette', val: traits.palette }
   ].filter(t => t.val && t.val !== 'None');
 
-  // If there are search terms, prioritize the trait(s) that matched the query
+  // If there are search terms, prioritize all trait(s) that matched the query
   if (qTerms.length > 0) {
     for (const t of allTraitEntries) {
       const lower = t.val.toLowerCase();
@@ -838,55 +840,112 @@ function formatCardMeta(traits, query = '') {
     }
   }
 
-  // Fill in secondary info (Bones, Cloak, Artifact, Sight, Crown, Palette) up to 2 items
+  // Fill in secondary info (up to max of 3 items for multi-trait searches or 2 default)
+  const maxParts = Math.max(2, parts.length);
   for (const t of allTraitEntries) {
-    if (parts.length >= 2) break;
+    if (parts.length >= maxParts) break;
     if (!parts.includes(t.val)) parts.push(t.val);
   }
 
-  return parts.slice(0, 2).join(' • ');
+  return parts.join(' • ');
 }
 
 function searchTokensByTrait(query, limit = 15) {
   if (!query || !query.trim()) return [];
-  const qTerms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const results = [];
-  const activeTypes = new Set(['Bones', 'Cloak', 'Artifact', 'Sight', 'Crown', 'Palette']);
+  const cleanQ = query.trim().toLowerCase().replace(/[,;+&]/g, ' ');
+  const qTerms = cleanQ.split(/\s+/).filter(Boolean);
+  if (qTerms.length === 0) return [];
+
+  // All valid traits on Argonaut NFTs:
+  // Palette, Bones, Cloak, Relic, Sight, Artifact, Crown
+  const activeTypes = new Set(['Bones', 'Cloak', 'Relic', 'Sight', 'Artifact', 'Crown', 'Palette']);
+  const scoredResults = [];
 
   for (let tid = 1; tid <= 9999; tid++) {
     const meta = getOfflineTokenTraits(tid);
     if (!meta) continue;
 
+    const traitEntries = [];
     const searchable = [];
+
     searchable.push(tid.toString(), '#' + tid.toString(), '#' + tid.toString().padStart(4, '0'));
 
     meta.attributes.forEach(a => {
-      if (activeTypes.has(a.trait_type) && a.value !== 'None') {
+      if (activeTypes.has(a.trait_type) && a.value && a.value !== 'None') {
         const valLower = a.value.toLowerCase();
         const typeLower = a.trait_type.toLowerCase();
+        traitEntries.push({ type: a.trait_type, val: a.value, valLower, typeLower });
         searchable.push(valLower);
         searchable.push(typeLower);
         searchable.push(valLower + ' ' + typeLower);
         if (typeLower === 'bones') searchable.push(valLower + ' bone');
         if (typeLower === 'cloak') searchable.push(valLower + ' cloak');
+        if (typeLower === 'relic') searchable.push(valLower + ' relic');
+        if (typeLower === 'sight') searchable.push(valLower + ' sight');
+        if (typeLower === 'crown') searchable.push(valLower + ' crown');
       }
     });
 
-    const allMatch = qTerms.every(term => {
-      const termNorm = term.replace(/s$/, '');
-      return searchable.some(s => s.includes(term) || (termNorm && s.includes(termNorm)));
-    });
+    let matchCount = 0;
+    let score = 0;
 
-    if (allMatch) {
-      results.push({
+    for (const term of qTerms) {
+      const termNorm = term.replace(/s$/, '');
+      let termMatched = false;
+
+      // Check trait entries with prominence weights
+      for (const entry of traitEntries) {
+        const isMatch = entry.valLower.includes(term) ||
+                        (termNorm.length > 2 && entry.valLower.includes(termNorm)) ||
+                        entry.typeLower === term;
+        if (isMatch) {
+          termMatched = true;
+          // Prominence weights
+          if (entry.type === 'Bones') score += 120;
+          else if (entry.type === 'Crown') score += 100;
+          else if (entry.type === 'Cloak') score += 90;
+          else if (entry.type === 'Sight') score += 80;
+          else if (entry.type === 'Artifact') score += 70;
+          else if (entry.type === 'Relic') score += 40;
+          else if (entry.type === 'Palette') score += 30;
+
+          if (entry.valLower === term) score += 50;
+          break;
+        }
+      }
+
+      // Check token ID match
+      if (!termMatched && searchable.some(s => s === term || s === '#' + term)) {
+        termMatched = true;
+        score += 200;
+      }
+
+      if (termMatched) {
+        matchCount++;
+      }
+    }
+
+    if (matchCount > 0) {
+      scoredResults.push({
         id: tid,
         name: `ARGOPEPEN #${tid.toString().padStart(4, '0')}`,
-        meta
+        meta,
+        matchCount,
+        score
       });
-      if (results.length >= limit) break;
     }
   }
-  return results;
+
+  // 1. Prioritize tokens matching ALL search terms (full multi-trait match)
+  const fullMatches = scoredResults.filter(r => r.matchCount === qTerms.length);
+  if (fullMatches.length > 0) {
+    fullMatches.sort((a, b) => b.score - a.score || a.id - b.id);
+    return fullMatches.slice(0, limit);
+  }
+
+  // 2. Otherwise sort by highest number of matching traits, then score
+  scoredResults.sort((a, b) => b.matchCount - a.matchCount || b.score - a.score || a.id - b.id);
+  return scoredResults.slice(0, limit);
 }
 
 function renderGallery(items, query = '') {

@@ -835,6 +835,130 @@ function populateGallery() {
   }).join('');
 }
 
+// Toast Notification
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2200);
+}
+
+// Download Artwork Helpers (SVG, PNG, JPG)
+function getActiveOpepenSVG() {
+  if (currentOpepenSVG) return currentOpepenSVG;
+  const tid = currentTokenId || 20;
+  const meta = getOfflineTokenTraits(tid);
+  const { svg } = synthesizeOpepen(tid, meta);
+  currentOpepenSVG = svg;
+  return svg;
+}
+
+function downloadSVG() {
+  const svgContent = getActiveOpepenSVG();
+  if (!svgContent) {
+    showToast('No artwork available to export');
+    return;
+  }
+  const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const tidStr = (currentTokenId || 20).toString().padStart(4, '0');
+  a.download = `Argonaut_${tidStr}_Opepen.svg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  showToast(`Downloaded SVG (#${tidStr})`);
+}
+
+function fallbackDataUrl(canvas, ext, tidStr) {
+  const mime = ext === 'jpg' ? 'image/jpeg' : 'image/png';
+  const dataUrl = canvas.toDataURL(mime, 0.98);
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = `Argonaut_${tidStr}_Opepen.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast(`Downloaded HD ${ext.toUpperCase()} (#${tidStr})`);
+}
+
+function downloadRasterImage(format = 'png') {
+  const svgContent = getActiveOpepenSVG();
+  if (!svgContent) {
+    showToast('No artwork available to export');
+    return;
+  }
+  const tidStr = (currentTokenId || 20).toString().padStart(4, '0');
+  const scale = 4; // 2240x2240 ultra high-definition crisp pixel art
+  const size = 560 * scale;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    showToast('Canvas not supported');
+    return;
+  }
+  ctx.imageSmoothingEnabled = false;
+
+  const isJpg = (format === 'jpg' || format === 'jpeg');
+  if (isJpg) {
+    let bgFill = '#141414';
+    const bgMatch = svgContent.match(/<path d="M560 0H0V560H560V0Z" fill="([^"]+)"/);
+    if (bgMatch) bgFill = bgMatch[1];
+    ctx.fillStyle = bgFill;
+    ctx.fillRect(0, 0, size, size);
+  }
+
+  const svgDataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+
+  img.onload = () => {
+    try {
+      ctx.drawImage(img, 0, 0, size, size);
+      const mime = isJpg ? 'image/jpeg' : 'image/png';
+      const ext = isJpg ? 'jpg' : 'png';
+
+      if (canvas.toBlob) {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            fallbackDataUrl(canvas, ext, tidStr);
+            return;
+          }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Argonaut_${tidStr}_Opepen.${ext}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+          showToast(`Downloaded HD ${ext.toUpperCase()} (#${tidStr})`);
+        }, mime, 0.98);
+      } else {
+        fallbackDataUrl(canvas, ext, tidStr);
+      }
+    } catch (err) {
+      console.error('Raster export error:', err);
+      showToast(`Error generating ${format.toUpperCase()}`);
+    }
+  };
+
+  img.onerror = (e) => {
+    console.error('Image load error for SVG rasterization:', e);
+    showToast(`Failed to rasterize ${format.toUpperCase()}`);
+  };
+
+  img.src = svgDataUri;
+}
+
 // Event Listeners setup
 function setupEventListeners() {
   document.getElementById('btn-generate').addEventListener('click', () => {
@@ -867,13 +991,50 @@ function setupEventListeners() {
     loadToken(randId);
   });
 
-  document.getElementById('btn-download-svg').addEventListener('click', downloadSVG);
-  document.getElementById('btn-download-jpg').addEventListener('click', () => downloadImage('jpeg', 2));
-  document.getElementById('btn-download-png').addEventListener('click', () => downloadImage('png', 2));
-  const btnCopy = document.getElementById('btn-copy-svg');
-  if (btnCopy) btnCopy.addEventListener('click', copySVGCode);
-  const btnJson = document.getElementById('btn-export-json');
-  if (btnJson) btnJson.addEventListener('click', exportJSON);
+  // Single Download button with dropdown
+  const dropdown = document.getElementById('download-dropdown');
+  const btnDownloadMain = document.getElementById('btn-download-main');
+
+  if (btnDownloadMain && dropdown) {
+    btnDownloadMain.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dropdown.classList.toggle('open');
+      btnDownloadMain.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  }
+
+  document.querySelectorAll('.download-option').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const fmt = btn.dataset.format;
+      if (dropdown) {
+        dropdown.classList.remove('open');
+        if (btnDownloadMain) btnDownloadMain.setAttribute('aria-expanded', 'false');
+      }
+      if (fmt === 'svg') {
+        downloadSVG();
+      } else if (fmt === 'png') {
+        downloadRasterImage('png');
+      } else if (fmt === 'jpg') {
+        downloadRasterImage('jpg');
+      }
+    });
+  });
+
+  // Close dropdown on outside click or Esc
+  document.addEventListener('click', () => {
+    if (dropdown && dropdown.classList.contains('open')) {
+      dropdown.classList.remove('open');
+      if (btnDownloadMain) btnDownloadMain.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dropdown && dropdown.classList.contains('open')) {
+      dropdown.classList.remove('open');
+      if (btnDownloadMain) btnDownloadMain.setAttribute('aria-expanded', 'false');
+    }
+  });
 }
 
 // App Initialization

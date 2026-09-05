@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260905_dualside_v5">
+  <link rel="stylesheet" href="styles.css?v=20260905_download_v1">
 </head>
 <body>
   <div class="app-container">
@@ -68,10 +68,27 @@
           <!-- Random Shuffle Button -->
           <button id="btn-random" class="action-btn btn-random" title="Random Token Shuffle">🎲 RANDOM</button>
 
-          <!-- Export Actions -->
-          <button id="btn-download-svg" class="action-btn" title="Download Vector SVG">SVG</button>
-          <button id="btn-download-png" class="action-btn" title="Download HD PNG">PNG</button>
-          <button id="btn-download-jpg" class="action-btn" title="Download HD JPG">JPG</button>
+          <!-- 3. Single Download Dropdown Button -->
+          <div class="download-dropdown-container" id="download-dropdown">
+            <button id="btn-download-main" class="action-btn btn-download" title="Download Artwork" aria-haspopup="true" aria-expanded="false">
+              <span>DOWNLOAD</span>
+              <span class="dropdown-chevron">▾</span>
+            </button>
+            <div class="download-menu" id="download-menu" role="menu">
+              <button class="download-option" data-format="svg" role="menuitem">
+                <span class="opt-label">SVG</span>
+                <span class="opt-sub">Vector</span>
+              </button>
+              <button class="download-option" data-format="png" role="menuitem">
+                <span class="opt-label">PNG</span>
+                <span class="opt-sub">2240×2240</span>
+              </button>
+              <button class="download-option" data-format="jpg" role="menuitem">
+                <span class="opt-label">JPG</span>
+                <span class="opt-sub">2240×2240</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -180,7 +197,7 @@
   <div id="toast" class="toast"></div>
 
   <!-- Engine Data & Application Scripts -->
-  <script src="engine_data.js?v=20260905_latest_contract_traits"></script>
-  <script src="app.js?v=20260905_latest_contract_traits"></script>
+  <script src="engine_data.js?v=20260905_download_v1"></script>
+  <script src="app.js?v=20260905_download_v1"></script>
 </body>
 </html>

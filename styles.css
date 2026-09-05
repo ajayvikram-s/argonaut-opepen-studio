@@ -251,12 +251,12 @@ body {
 }
 
 /* ==========================================================================
-   ACTIONS BAR & TOKEN CONTROLS (Strict Equal Size for All 5 Controls)
+   ACTIONS BAR & TOKEN CONTROLS (Strict Equal Size for All 3 Controls)
    ========================================================================== */
 .actions-bar {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
   width: 100%;
 }
 
@@ -268,8 +268,8 @@ body {
   background: var(--bg-surface-subtle);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-xs);
-  padding: 0 4px 0 6px;
-  height: 32px;
+  padding: 0 6px 0 8px;
+  height: 36px;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -297,11 +297,11 @@ body {
   border: none;
   outline: none;
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
   text-align: center;
-  padding: 0 2px;
+  padding: 0 4px;
 }
 
 #token-id-input::-webkit-outer-spin-button,
@@ -317,9 +317,9 @@ body {
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 0 4px;
   line-height: 1;
   transition: color var(--transition-fast);
   flex-shrink: 0;
@@ -335,15 +335,16 @@ body {
 /* Action Buttons (Equal Size) */
 .action-btn {
   width: 100%;
-  height: 32px;
+  height: 36px;
   background: var(--bg-surface-subtle);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-xs);
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.05em;
-  padding: 0;
+  padding: 0 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -371,6 +372,107 @@ body {
 
 .btn-random:hover {
   border-color: var(--border-focus);
+}
+
+/* Download Dropdown Container & Menu */
+.download-dropdown-container {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.btn-download {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.dropdown-chevron {
+  font-size: 8px;
+  opacity: 0.7;
+  transition: transform var(--transition-fast);
+  display: inline-block;
+}
+
+.download-dropdown-container.open .dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+.download-dropdown-container.open .btn-download {
+  border-color: var(--border-focus);
+  background: var(--bg-hover);
+}
+
+.download-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  background: #111114;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xs);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.5);
+  padding: 4px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 150;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.download-dropdown-container.open .download-menu {
+  display: flex;
+  animation: menuDropUp 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes menuDropUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.download-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  color: #E2E8F0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.download-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+.download-option .opt-label {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.download-option .opt-sub {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.02em;
 }
 
 /* ==========================================================================

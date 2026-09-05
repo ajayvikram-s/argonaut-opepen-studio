@@ -801,45 +801,75 @@ async function loadToken(tokenId) {
   if (btnSpinner) btnSpinner.style.display = 'none';
 }
 
-// 15 Curated Editions & Dynamic Trait Search State (Strictly 2 Cloak, 13 Other Traits)
+// 15 Curated Editions State (At least 1 from all 9 Bones traits, strictly 2 Cloaks & 13 Non-Cloaks)
 let defaultRandomEditions = [];
+let CURATED_BONES_CACHE = null;
+
+function getCuratedBonesCache() {
+  if (CURATED_BONES_CACHE) return CURATED_BONES_CACHE;
+  const allBoneNames = ['Alien', 'Radioactive', 'Gold', 'Petrified', 'Floral', 'Coral', 'Silver', 'Prehistoric', 'Bone'];
+  const byBone = {};
+  for (const b of allBoneNames) {
+    byBone[b] = { cloak: [], nonCloak: [] };
+  }
+
+  for (let tid = 1; tid <= 9999; tid++) {
+    const meta = getOfflineTokenTraits(tid);
+    if (!meta || !meta.attributes) continue;
+    const bAttr = meta.attributes.find(a => a.trait_type === 'Bones');
+    if (!bAttr || !byBone[bAttr.value]) continue;
+    const hasCloak = meta.indices ? meta.indices.cloak_idx > 0 : false;
+    if (hasCloak) {
+      byBone[bAttr.value].cloak.push(tid);
+    } else {
+      byBone[bAttr.value].nonCloak.push(tid);
+    }
+  }
+
+  CURATED_BONES_CACHE = { byBone, allBoneNames };
+  return CURATED_BONES_CACHE;
+}
 
 function getRandomGalleryEditions(count = 15) {
-  const cloakTokens = [];
-  const otherTokens = [];
-  const cloakTarget = 2;
-  const otherTarget = Math.max(0, count - cloakTarget);
+  const { byBone, allBoneNames } = getCuratedBonesCache();
+  const chosen = new Set();
 
-  // Pick exactly 2 unique tokens with a Cloak trait
-  let cloakAttempts = 0;
-  while (cloakTokens.length < cloakTarget && cloakAttempts < 2000) {
-    cloakAttempts++;
-    const tid = Math.floor(Math.random() * 9999) + 1;
-    if (cloakTokens.includes(tid)) continue;
-    const meta = getOfflineTokenTraits(tid);
-    if (meta && meta.indices && meta.indices.cloak_idx > 0) {
-      cloakTokens.push(tid);
+  // Exactly 2 tokens out of the 15 will have cloaks
+  // Pick 2 distinct bone types from those with cloak variations
+  const bonesWithCloaks = ['Alien', 'Radioactive', 'Gold', 'Petrified', 'Floral', 'Silver', 'Prehistoric', 'Bone'];
+  const shuffledCloakBones = [...bonesWithCloaks].sort(() => Math.random() - 0.5);
+  const cloakBone1 = shuffledCloakBones[0];
+  const cloakBone2 = shuffledCloakBones[1];
+
+  // 1. Guaranteed: Pick at least 1 token from each of the 9 Bones traits
+  for (const b of allBoneNames) {
+    let pool;
+    if (b === cloakBone1 || b === cloakBone2) {
+      pool = byBone[b].cloak;
+    } else {
+      pool = byBone[b].nonCloak;
+    }
+    if (pool && pool.length > 0) {
+      const tid = pool[Math.floor(Math.random() * pool.length)];
+      chosen.add(tid);
     }
   }
 
-  // Pick exactly 13 unique tokens with other traits (Cloak == None)
-  let otherAttempts = 0;
-  while (otherTokens.length < otherTarget && otherAttempts < 2000) {
-    otherAttempts++;
-    const tid = Math.floor(Math.random() * 9999) + 1;
-    if (cloakTokens.includes(tid) || otherTokens.includes(tid)) continue;
-    const meta = getOfflineTokenTraits(tid);
-    if (meta && meta.indices && meta.indices.cloak_idx === 0) {
-      otherTokens.push(tid);
-    }
+  // 2. Fill remaining slots up to count (15) with NON-CLOAK tokens across all bones
+  const nonCloakPool = [];
+  for (const b of allBoneNames) {
+    nonCloakPool.push(...byBone[b].nonCloak);
   }
 
-  // Combine and shuffle so the 2 cloaks are dispersed naturally
-  const combined = [...cloakTokens, ...otherTokens];
-  for (let i = combined.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [combined[i], combined[j]] = [combined[j], combined[i]];
+  let attempts = 0;
+  while (chosen.size < count && attempts < 1000) {
+    attempts++;
+    const tid = nonCloakPool[Math.floor(Math.random() * nonCloakPool.length)];
+    chosen.add(tid);
   }
+
+  // 3. Shuffle so that all 9 bone archetypes and the 2 cloaks are naturally distributed
+  const combined = Array.from(chosen).sort(() => Math.random() - 0.5);
 
   return combined.map(id => ({
     id,

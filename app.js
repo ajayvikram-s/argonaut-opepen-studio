@@ -782,21 +782,21 @@ async function loadToken(tokenId) {
 
 // 15 Curated Editions Catalog (Real living Argonauts with updated smart contract traits)
 const CURATED_EDITIONS = [
-  { id: 1, name: "Argonaut Opepen #0001" },
-  { id: 2, name: "Argonaut Opepen #0002" },
-  { id: 4, name: "Argonaut Opepen #0004" },
-  { id: 8, name: "Argonaut Opepen #0008" },
-  { id: 18, name: "Argonaut Opepen #0018" },
-  { id: 20, name: "Argonaut Opepen #0020" },
-  { id: 28, name: "Argonaut Opepen #0028" },
-  { id: 42, name: "Argonaut Opepen #0042" },
-  { id: 107, name: "Argonaut Opepen #0107" },
-  { id: 125, name: "Argonaut Opepen #0125" },
-  { id: 777, name: "Argonaut Opepen #0777" },
-  { id: 1337, name: "Argonaut Opepen #1337" },
-  { id: 1458, name: "Argonaut Opepen #1458" },
-  { id: 6969, name: "Argonaut Opepen #6969" },
-  { id: 9999, name: "Argonaut Opepen #9999" }
+  { id: 1, name: "ARGOPEPEN #0001" },
+  { id: 2, name: "ARGOPEPEN #0002" },
+  { id: 4, name: "ARGOPEPEN #0004" },
+  { id: 8, name: "ARGOPEPEN #0008" },
+  { id: 18, name: "ARGOPEPEN #0018" },
+  { id: 20, name: "ARGOPEPEN #0020" },
+  { id: 28, name: "ARGOPEPEN #0028" },
+  { id: 42, name: "ARGOPEPEN #0042" },
+  { id: 107, name: "ARGOPEPEN #0107" },
+  { id: 125, name: "ARGOPEPEN #0125" },
+  { id: 777, name: "ARGOPEPEN #0777" },
+  { id: 1337, name: "ARGOPEPEN #1337" },
+  { id: 1458, name: "ARGOPEPEN #1458" },
+  { id: 6969, name: "ARGOPEPEN #6969" },
+  { id: 9999, name: "ARGOPEPEN #9999" }
 ];
 
 function populateGallery() {
@@ -851,7 +851,7 @@ function downloadSVG() {
   const a = document.createElement('a');
   a.href = url;
   const tidStr = (currentTokenId || 20).toString().padStart(4, '0');
-  a.download = `Argonaut_${tidStr}_Opepen.svg`;
+  a.download = `ARGOPEPEN_${tidStr}.svg`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -864,7 +864,7 @@ function fallbackDataUrl(canvas, ext, tidStr) {
   const dataUrl = canvas.toDataURL(mime, 0.98);
   const a = document.createElement('a');
   a.href = dataUrl;
-  a.download = `Argonaut_${tidStr}_Opepen.${ext}`;
+  a.download = `ARGOPEPEN_${tidStr}.${ext}`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -918,7 +918,7 @@ function downloadRasterImage(format = 'png') {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `Argonaut_${tidStr}_Opepen.${ext}`;
+          a.download = `ARGOPEPEN_${tidStr}.${ext}`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);

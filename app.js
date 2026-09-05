@@ -643,6 +643,8 @@ function synthesizeOpepen(tokenId, meta) {
     shuffledPalette.push(...tmp);
   }
 
+  const cloakBodyMap = (window.CLOAK_BODY_MAPS && window.CLOAK_BODY_MAPS[cloakIdx]) || null;
+
   // Convert head cells to paths
   const headPaths = [];
   Object.keys(headCombined).forEach(k => {
@@ -658,7 +660,10 @@ function synthesizeOpepen(tokenId, meta) {
   let cIdx = 0;
   CANON_BODY_TARGET.forEach(([gx, gy]) => {
     if (headCombined[`${gx},${gy}`]) return; // Avoid duplicate overlapping pixels
-    const c = cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++];
+    const coordKey = `${gx},${gy}`;
+    const c = (cloakIdx > 0 && cloakBodyMap && cloakBodyMap[coordKey])
+      ? cloakBodyMap[coordKey]
+      : (cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++]);
     const x = gx * 10;
     const y = gy * 10;
     bodyPaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${c}"/>`);
@@ -667,7 +672,10 @@ function synthesizeOpepen(tokenId, meta) {
   const basePaths = [];
   CANON_BASE_TARGET.forEach(([gx, gy]) => {
     if (headCombined[`${gx},${gy}`]) return; // Avoid duplicate overlapping pixels
-    const c = cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++];
+    const coordKey = `${gx},${gy}`;
+    const c = (cloakIdx > 0 && cloakBodyMap && cloakBodyMap[coordKey])
+      ? cloakBodyMap[coordKey]
+      : (cloakIdx > 0 ? getVolumetricClothColor(gx, gy, cloakIdx) : shuffledPalette[cIdx++]);
     const x = gx * 10;
     const y = gy * 10;
     basePaths.push(`<path d="M${x + 10} ${y}H${x}V${y + 10}H${x + 10}V${y}Z" fill="${c}"/>`);

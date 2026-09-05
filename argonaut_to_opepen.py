@@ -268,6 +268,15 @@ def get_volumetric_cloth_color(gx, gy, c_idx):
             return pal["ROSE_MID"]
     return pal["MID_TONE"]
 
+CLOAK_BODY_MAPS = {}
+try:
+    _maps_path = os.path.join(os.path.dirname(__file__), 'extracted_cloak_maps.json')
+    if os.path.exists(_maps_path):
+        with open(_maps_path, 'r', encoding='utf-8') as _f:
+            CLOAK_BODY_MAPS = json.load(_f).get('body', {})
+except Exception:
+    pass
+
 def hex_to_rgb(hex_str):
     hex_str = hex_str.lstrip('#')
     if len(hex_str) == 3:
@@ -412,11 +421,18 @@ def generate_opepen_for_token(token_id, output_dir=None):
 
     body_paths = []
     c_idx = 0
+    cloak_map = CLOAK_BODY_MAPS.get(str(cloak_idx)) if cloak_idx > 0 else None
     for gx, gy in CANON_BODY_TARGET:
         if (gx, gy) in head_right_cells or (gx, gy) in head_left_cells:
             continue
-        c = get_volumetric_cloth_color(gx, gy, cloak_idx) if cloak_idx > 0 else shuffled_palette[c_idx]
-        c_idx += 1
+        coord_key = f"{gx},{gy}"
+        if cloak_idx > 0 and cloak_map and coord_key in cloak_map:
+            c = cloak_map[coord_key]
+        elif cloak_idx > 0:
+            c = get_volumetric_cloth_color(gx, gy, cloak_idx)
+        else:
+            c = shuffled_palette[c_idx]
+            c_idx += 1
         x = gx * 10
         y = gy * 10
         path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
@@ -426,8 +442,14 @@ def generate_opepen_for_token(token_id, output_dir=None):
     for gx, gy in CANON_BASE_TARGET:
         if (gx, gy) in head_right_cells or (gx, gy) in head_left_cells:
             continue
-        c = get_volumetric_cloth_color(gx, gy, cloak_idx) if cloak_idx > 0 else shuffled_palette[c_idx]
-        c_idx += 1
+        coord_key = f"{gx},{gy}"
+        if cloak_idx > 0 and cloak_map and coord_key in cloak_map:
+            c = cloak_map[coord_key]
+        elif cloak_idx > 0:
+            c = get_volumetric_cloth_color(gx, gy, cloak_idx)
+        else:
+            c = shuffled_palette[c_idx]
+            c_idx += 1
         x = gx * 10
         y = gy * 10
         path_d = f"M{x+10} {y}H{x}V{y+10}H{x+10}V{y}Z"
